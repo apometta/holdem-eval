@@ -17,20 +17,18 @@ using namespace std;
 -d, --dead: dead.  one string  default empty.
 --mc, --monte-carlo: mc simulation.  default false.
 -e, --margin, --stderr: margin of error.  expects a double. default 0.1%
-                        does nothing unless --mc is specified
+                        use 0 for infinite, does nothing without --mc
 -t, --time: maximum time to calculate for in seconds.  default 30,
             0 for infinite calculation (use at your own risk)
 -h, --help: print help information
 */
 
-const int NUM_THREADS = 0;  //max parallelism
-const int CALLBACK_INTERVAL = 0.25; //call callback every 5 seconds
 bool debug = false; //debug flag
 
 /*Fails the program after printing specified error message.  Sets exit status,
 which by default is EXIT_FAILURE. */
 void fail_prog(string err_report, int status = EXIT_FAILURE){
-  cerr << "\nterm-heval: error: " << err_report << "." << endl;
+  cerr << "term-heval: error: " << err_report << "." << endl;
   exit(status);
 }
 
@@ -56,14 +54,33 @@ vector<CardRange> get_ranges_from_argv(const vector<string>& range_strings){
       fail_prog("range " + *i + " invalid");
     }
     ranges.push_back(*cr);
-    delete cr; //avoid memory leaks
+    delete cr; //avoid memory leaks.  this doesn't compromise ranges
   }
   return ranges;
 }
 
+/*This function takes a string corresponding to a list of cards and returns
+a "cardmask": uint64_t (large int) corresponding to that specific combination.
+This is used for setting board and dead, and also checks for errors.
+An optional boolean argument, board, is used when checking for the board,
+which has stricter standards (i.e. card maximum).*/
+uint64_t get_cardmask(string cards, bool board = false){
+  //We need to ensure that the string is valid, i.e. check the bitmask.
+  uint64_t bitmask = CardRange::getCardMask(cards);
+  if (bitmask == 0){
+    if (board) fail_prog("invalid board argument");
+    else fail_prog("invalid dead argument");
+  }
+  //if there are more than 10 chars in board, then the board has more than
+  //5 cards, which is too large.  it's possible the user inputted too many
+  //on accident, but we will simply have to fail out here
+  if (board && cards.length() > 10) fail_prog("board has too many cards");
+  return bitmask;
+}
+
 int main(int argc, char **argv){
   //Option gathering
-  string board = ""; string dead = "";
+  uint64_t board = 0; uint64_t dead = 0;
   bool monte_carlo = false;
   double err_margin = 1e-3; double time_max = 30;
   static struct option long_options[] = {
@@ -87,12 +104,12 @@ int main(int argc, char **argv){
         debug_print("debug = true");
         break;
       case 'b':
-        board = optarg; //C++ string object has a constructor for C char*
-        debug_print("board = " + board);
+        board = get_cardmask(optarg, true);
+        debug_print("board = " + to_string(board) + " = " + optarg);
         break;
       case 'd':
-        dead = optarg;
-        debug_print("dead = " + dead);
+        dead = get_cardmask(optarg, false);
+        debug_print("dead = " + to_string(dead) + " = " + optarg);
         break;
       case 'm':
         monte_carlo = true;
@@ -129,18 +146,32 @@ int main(int argc, char **argv){
         break;
     }
   }
+  //make sure running is non-infinite
+  if (monte_carlo && (err_margin == 0) && (time_max == 0)){
+    fail_prog("infinite simulation queried (set time limit, error margin"
+              " or disable monte-carlo)");
+  }
   //put all remaining ranges into vector of strings
-  vector<string> range_strings;
+  vector<string> range_strs;
   for (int i = optind; i < argc; ++i){
-    range_strings.push_back(argv[i]);
+    range_strs.push_back(argv[i]);
   }
   debug_print("options parsed, remaing range strings acquired from argv.");
 
   //setting values & final error checking
-  vector<CardRange> ranges = get_ranges_from_argv(range_strings);
-  debug_print("get_ranges_from_argv successful.", true;);
+  vector<CardRange> ranges = get_ranges_from_argv(range_strs);
+  debug_print("get_ranges_from_argv successful.", true);
+  EquityCalculator eq;
+  eq.setTimeLimit(time_max);
+  debug_print("time limit set to " + to_string(time_max));
 
-  //running equity calculator & printing results
+  //running equity calculator
+  eq.start(ranges, board, dead, monte_carlo, err_margin);
+  eq.wait();
+
+  //printing results
+  auto results = eq.getResults();
+  
 
   return EXIT_SUCCESS;
 }
