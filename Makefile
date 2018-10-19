@@ -2,16 +2,31 @@
 #term-heval project.  It compiles the main executable from the source.
 #Currently under construction.
 
-TEST = test.cpp #not related to project, just a testing area for random ideas
+CXX = g++
+CXXFLAGS += -O3 -std=c++17 -Wall -Wpedantic -pthread
+RM = rm -rf
 MSRC = term-heval.cpp
+#below taken and adapted from OMPEval makefile
+OMPESRC = $(wildcard OMPEval/omp/*.cpp)
+OMPEOBJ = ${OMPESRC:.cpp=.o}
+LIB = OMPEval/lib
+TSRC = testy.cpp
+ARCH = $(LIB)/ompeval.a
 EXEC = term-heval
-OPTS = -std=c++11 -Wall -Wextra -Wpedantic
 
-all: $(MSRC)
-	g++ $(OPTS) $(MSRC) -o $(EXEC)
+all: $(EXEC)
 
-clean: $(EXEC)
-	rm $(EXEC)
+$(EXEC): $(MSRC) $(ARCH)
+	g++ $(OPTS) -o $@ $^
 
-test: $(TEST)
-	g++ $(OPTS) $(TEST) -o test
+$(ARCH): $(OMPEOBJ) | $(LIB)
+	ar rcs $@ $^
+
+$(LIB):
+	mkdir $@
+
+clean:
+	$(RM) $(EXEC) $(ARCH) $(OMPEOBJ) testy
+
+testy: $(TSRC) $(ARCH)
+	$(CXX) $(CXXFLAGS) -o $@ $^
