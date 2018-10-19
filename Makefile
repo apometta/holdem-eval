@@ -27,6 +27,7 @@ $(LIB):
 
 clean:
 	$(RM) $(EXEC) $(ARCH) $(OMPEOBJ) testy
+	rmdir $(LIB)
 
 testy: $(TSRC) $(ARCH)
 	$(CXX) $(CXXFLAGS) -o $@ $^
