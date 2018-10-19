@@ -3,7 +3,7 @@
 #Currently under construction.
 
 CXX = g++
-CXXFLAGS += -O3 -std=c++17 -Wall -Wpedantic -pthread
+CXXFLAGS += -O3 -std=c++11 -Wall -Wpedantic -pthread
 RM = rm -rf
 MSRC = term-heval.cpp
 #below taken and adapted from OMPEval makefile
@@ -26,8 +26,7 @@ $(LIB):
 	mkdir $@
 
 clean:
-	$(RM) $(EXEC) $(ARCH) $(OMPEOBJ) testy
-	rmdir $(LIB)
+	$(RM) $(EXEC) $(ARCH) $(LIB) $(OMPEOBJ) testy
 
 testy: $(TSRC) $(ARCH)
 	$(CXX) $(CXXFLAGS) -o $@ $^
