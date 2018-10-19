@@ -17,7 +17,7 @@ EXEC = term-heval
 all: $(EXEC)
 
 $(EXEC): $(MSRC) $(ARCH)
-	g++ $(OPTS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(ARCH): $(OMPEOBJ) | $(LIB)
 	ar rcs $@ $^
