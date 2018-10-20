@@ -7,6 +7,7 @@ simply getting proper option input running. */
 #include <unistd.h>
 #include <getopt.h>
 #include <stdexcept>
+#include <cassert>
 #include "OMPEval/omp/EquityCalculator.h"
 using namespace omp;
 using namespace std;
@@ -101,19 +102,15 @@ int main(int argc, char **argv){
     switch(opt_character){
       case '0': //if --debug is set, it should be set first.
         debug = true;
-        debug_print("debug = true");
         break;
       case 'b':
         board = get_cardmask(optarg, true);
-        debug_print("board = " + to_string(board) + " = " + optarg);
         break;
       case 'd':
         dead = get_cardmask(optarg, false);
-        debug_print("dead = " + to_string(dead) + " = " + optarg);
         break;
       case 'm':
         monte_carlo = true;
-        debug_print("monte_carlo = " + to_string(monte_carlo));
         break;
       case 'e': //wrapping the case in brackets prevents
       {         //"jump to case label" error
@@ -125,7 +122,6 @@ int main(int argc, char **argv){
         } catch (invalid_argument ia) {
           fail_prog("Invalid error margin argument");
         }
-        debug_print("err_margin = " + to_string(err_margin));
         break;
       }
       case 't':
@@ -138,11 +134,9 @@ int main(int argc, char **argv){
         } catch (invalid_argument ia) {
           fail_prog("Invalid maximum time argument");
         }
-        debug_print("time_max = " + to_string(time_max));
         break;
       }
       case 'h':
-        debug_print("Printing help info");
         break;
     }
   }
@@ -156,22 +150,46 @@ int main(int argc, char **argv){
   for (int i = optind; i < argc; ++i){
     range_strs.push_back(argv[i]);
   }
-  debug_print("options parsed, remaing range strings acquired from argv.");
 
   //setting values & final error checking
   vector<CardRange> ranges = get_ranges_from_argv(range_strs);
-  debug_print("get_ranges_from_argv successful.", true);
   EquityCalculator eq;
   eq.setTimeLimit(time_max);
-  debug_print("time limit set to " + to_string(time_max));
+  debug_print("time limit set to " + to_string(time_max) + ", starting");
 
   //running equity calculator
   eq.start(ranges, board, dead, monte_carlo, err_margin);
+  debug_print("Ran eq.start, running eq.wait");
   eq.wait();
+  debug_print("eq.wait has ended.");
 
   //printing results
-  auto results = eq.getResults();
-  
+  auto r = eq.getResults();
+  debug_print("Results acquired, printing.");
+  assert (range_strs.size() == r.players);
+  cout << "Equity between " + to_string(r.players) + " players:" << endl;
+  //we are traversing 2 lists at the same time, so we just use an int
+  for (unsigned int i = 0; i < r.players; ++i){
+    cout << range_strs.at(i) << ": " + to_string(r.equity[i]) << endl;
+  }
+  bool completed = (r.progress >= 1);
+  if (!completed){ //we didn't finish calculation
+    cout << "Simulation timed out after " + to_string(r.time) + " seconds."
+         << endl;
+    cout << "Calculation only " << to_string(r.progress * 100) <<
+        "% complete, error margin: " << to_string(r.stdev * 100) <<
+        "%." << endl;
+    if (r.enumerateAll){
+      cout << "If error margin is too high, consider using " <<
+           "monte-carlo simulation with --mc." << endl;
+    } else {
+      cout << "If error margin is too high, consider a " <<
+           "longer time maximum." << endl;
+    }
+  } else {
+    cout << "Simulation completed after " + to_string(r.time) + " seconds."
+         << endl;
+  }
 
   return EXIT_SUCCESS;
 }
