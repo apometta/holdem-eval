@@ -8,6 +8,7 @@ simply getting proper option input running. */
 #include <getopt.h>
 #include <stdexcept>
 #include <cassert>
+#include <cmath>
 #include "OMPEval/omp/EquityCalculator.h"
 using namespace omp;
 using namespace std;
@@ -34,11 +35,10 @@ void fail_prog(string err_report, int status = EXIT_FAILURE){
 }
 
 /*Prints specified string if debug flag is specified, otherwise does nothing.
-Can optionally add additional space before to separate important messages.*/
-void debug_print(string debug_check, bool space_info = false){
+Saves a lot of space putting the check here.*/
+void debug_print(string debug_check){
   if (!debug) return;
-  if (space_info) cout << endl;
-  cout << debug_check << endl;
+  cerr << debug_check << endl;
 }
 
 /*Takes vector of given strings and returns necessary vector of hand ranges.
@@ -56,6 +56,7 @@ vector<CardRange> get_ranges_from_argv(const vector<string>& range_strings){
     }
     ranges.push_back(*cr);
     delete cr; //avoid memory leaks.  this doesn't compromise ranges
+    debug_print("Range added: " + *i);
   }
   return ranges;
 }
@@ -145,6 +146,7 @@ int main(int argc, char **argv){
     fail_prog("infinite simulation queried (set time limit, error margin"
               " or disable monte-carlo)");
   }
+
   //put all remaining ranges into vector of strings
   vector<string> range_strs;
   for (int i = optind; i < argc; ++i){
@@ -155,40 +157,49 @@ int main(int argc, char **argv){
   vector<CardRange> ranges = get_ranges_from_argv(range_strs);
   EquityCalculator eq;
   eq.setTimeLimit(time_max);
-  debug_print("time limit set to " + to_string(time_max) + ", starting");
 
   //running equity calculator
+  debug_print("board = " + to_string(board));
+  debug_print("dead = " + to_string(dead));
+  debug_print("monte_carlo = " + to_string(monte_carlo));
+  debug_print("err_margin = " + to_string(err_margin));
   eq.start(ranges, board, dead, monte_carlo, err_margin);
-  debug_print("Ran eq.start, running eq.wait");
   eq.wait();
-  debug_print("eq.wait has ended.");
 
   //printing results
   auto r = eq.getResults();
-  debug_print("Results acquired, printing.");
+  debug_print("r.progress = " + to_string(r.progress));
+  debug_print("r.stdev = " + to_string(r.stdev));
+  debug_print("r.time = " + to_string(r.time));
+  debug_print("***");
   assert (range_strs.size() == r.players);
   cout << "Equity between " + to_string(r.players) + " players:" << endl;
   //we are traversing 2 lists at the same time, so we just use an int
   for (unsigned int i = 0; i < r.players; ++i){
     cout << range_strs.at(i) << ": " + to_string(r.equity[i]) << endl;
   }
+  debug_print("***");
   bool completed = (r.progress >= 1);
-  if (!completed){ //we didn't finish calculation
-    cout << "Simulation timed out after " + to_string(r.time) + " seconds."
-         << endl;
-    cout << "Calculation only " << to_string(r.progress * 100) <<
-        "% complete, error margin: " << to_string(r.stdev * 100) <<
-        "%." << endl;
-    if (r.enumerateAll){
-      cout << "If error margin is too high, consider using " <<
-           "monte-carlo simulation with --mc." << endl;
-    } else {
-      cout << "If error margin is too high, consider a " <<
-           "longer time maximum." << endl;
-    }
+  //this is a bootleg way of rounding to the tenths place - there might be
+  //a more elegant solution, but this works with the default functions
+  //provided in <cmath>
+  double prog_percentage = round(r.progress * 1000) / 10;
+  double err_percentage = round(r.stdev * 1000) / 10;
+  double calc_time = round(r.time * 10) / 10;
+  debug_print("completed = " + to_string(completed));
+  debug_print("prog_percentage = " + to_string(prog_percentage));
+  debug_print("err_percentage = " + to_string(err_percentage));
+  debug_print("calc_time = " + to_string(calc_time));
+  debug_print("***");
+
+  if (completed){
+    cout << "Calculation completed in " << calc_time << " seconds." << endl;
   } else {
-    cout << "Simulation completed after " + to_string(r.time) + " seconds."
-         << endl;
+    cout << "Calculation timed out after " << calc_time << " seconds: "
+            "target margin of error not reached." << endl;
+    if (r.enumerateAll){
+      cout << "Consider using monte-carlo with --mc" << endl;
+    }
   }
 
   return EXIT_SUCCESS;
