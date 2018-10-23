@@ -3,6 +3,7 @@ for the term-heval program.  It is in the testing phase: at the moment, we are
 simply getting proper option input running. */
 
 #include <iostream>
+#include <iomanip>
 #include <cstdlib>
 #include <unistd.h>
 #include <getopt.h>
@@ -39,13 +40,6 @@ Saves a lot of space putting the check here.*/
 void debug_print(string debug_check){
   if (!debug) return;
   cerr << debug_check << endl;
-}
-
-/*Rounds the inputted double to the hundredths place, and optionally
-outputs it as a percentage.*/
-double output_round(double d, bool percentage = false){
-  double result = percentage ? d * 100 : d;
-  return (round(result * 100) / 100);
 }
 
 /*Takes vector of given strings and returns necessary vector of hand ranges.
@@ -161,8 +155,11 @@ int main(int argc, char **argv){
 
   //put all remaining ranges into vector of strings
   vector<string> range_strs;
+  unsigned range_str_max = 0; //size of longest range string
   for (int i = optind; i < argc; ++i){
-    range_strs.push_back(argv[i]);
+    string range_arg = argv[i];
+    if (range_arg.length() > range_str_max) range_str_max = range_arg.length();
+    range_strs.push_back(range_arg);
   }
 
   //setting values & final error checking
@@ -176,32 +173,31 @@ int main(int argc, char **argv){
   eq.wait();
 
   //printing results
+  cout << fixed; //always 2 digits to the right of the decimal point
+  cout.precision(2);
   auto r = eq.getResults();
   assert (range_strs.size() == r.players);
   cout << "Equity between " + to_string(r.players) + " players:" << endl;
+  cout << "***" << endl;
   //we are traversing 2 lists at the same time, so we just use an int
   for (unsigned int i = 0; i < r.players; ++i){
-    cout << range_strs.at(i) << ": " << output_round(r.equity[i], true)
-         << "%" << endl;
+    cout << setw(range_str_max) << range_strs.at(i) << setw(0);
+    cout << ": " << r.equity[i] * 100 << "%" << endl;
   }
+  cout << "***" << endl;
+
   bool completed = (r.progress >= 1);
-  //this is a bootleg way of rounding to the tenths place - there might be
-  //a more elegant solution, but this works with the default functions
-  //provided in <cmath>
-  double progress = output_round(r.progress, true);
-  double stdev = r.stdev; //NOT rounded
-  double sim_time = output_round(r.time);
   if (completed){
-    cout << "Calculation completed in " << sim_time << " seconds." << endl;
+    cout << "Calculation completed in " << r.time << " seconds." << endl;
   } else {
-    cout << "Calculation timed out after " << sim_time << " seconds." << endl;
+    cout << "Calculation timed out after " << r.time << " seconds." << endl;
     if (r.enumerateAll){
-      cout << "Calculation progress: " << progress << "%." << endl;
+      cout << "Calculation progress: " << r.progress * 100 << "%." << endl;
       cout << "Consider using monte-carlo with --mc" << endl;
-    } else {
-      //stdev is not rounded because it might be very small but nonetheless
-      //relevant.
-      cout << "Standard deviation: " << stdev * 100 << "%." << endl;
+    } else { //we need more significant digits to print stdev
+      cout << defaultfloat; //reset fixed marker
+      cout.precision(6); //default precision
+      cout << "Standard deviation: " << r.stdev * 100 << "%." << endl;
     }
   }
 
