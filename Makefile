@@ -1,6 +1,5 @@
 #This Makefile, written by Andrew H. Pometta, is the Makefile for the
 #term-heval project.  It compiles the main executable from the source.
-#Currently under construction.
 
 CXX = g++
 CXXFLAGS += -O3 -std=c++11 -Wall -Wpedantic -pthread
