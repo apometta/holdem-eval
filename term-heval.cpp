@@ -18,7 +18,7 @@ using namespace std;
 -b, --board: board.  one string.  default empty
 -d, --dead: dead.  one string  default empty.
 --mc, --monte-carlo: mc simulation.  default false.
--e, --margin, --stderr: margin of error.  expects a double. default 0.1%
+-e, --margin, --stderr: margin of error.  expects a double. default 0.01%
                         use 0 for infinite, does nothing without --mc
 -t, --time: maximum time to calculate for in seconds.  default 30,
             0 for infinite calculation (use at your own risk)
@@ -39,6 +39,13 @@ Saves a lot of space putting the check here.*/
 void debug_print(string debug_check){
   if (!debug) return;
   cerr << debug_check << endl;
+}
+
+/*Rounds the inputted double to the hundredths place, and optionally
+outputs it as a percentage.*/
+double output_round(double d, bool percentage = false){
+  double result = percentage ? d * 100 : d;
+  return (round(result * 100) / 100);
 }
 
 /*Takes vector of given strings and returns necessary vector of hand ranges.
@@ -84,7 +91,7 @@ int main(int argc, char **argv){
   //Option gathering
   uint64_t board = 0; uint64_t dead = 0;
   bool monte_carlo = false;
-  double err_margin = 1e-3; double time_max = 30;
+  double err_margin = 1e-4; double time_max = 30;
   static struct option long_options[] = {
     {"debug", no_argument, 0, '0'},
     {"board", required_argument, 0, 'b'},
@@ -116,8 +123,13 @@ int main(int argc, char **argv){
       case 'e': //wrapping the case in brackets prevents
       {         //"jump to case label" error
         string cpp_err = optarg;
+        string::size_type trail_pos;
         try {
-          err_margin = stod(cpp_err);
+          err_margin = stod(cpp_err, &trail_pos);
+          string trail = cpp_err.substr(trail_pos);
+          if ((trail != "") && (trail.at(0) == '%')){
+            err_margin /= 100; //error margin inputted as a percentage
+          }
         } catch (out_of_range oor) {
           fail_prog("Error margin out of range");
         } catch (invalid_argument ia) {
@@ -159,46 +171,37 @@ int main(int argc, char **argv){
   eq.setTimeLimit(time_max);
 
   //running equity calculator
-  debug_print("board = " + to_string(board));
-  debug_print("dead = " + to_string(dead));
-  debug_print("monte_carlo = " + to_string(monte_carlo));
-  debug_print("err_margin = " + to_string(err_margin));
-  eq.start(ranges, board, dead, monte_carlo, err_margin);
+  //monte carlo is the default, falsify for enumeration
+  eq.start(ranges, board, dead, !monte_carlo, err_margin);
   eq.wait();
 
   //printing results
   auto r = eq.getResults();
-  debug_print("r.progress = " + to_string(r.progress));
-  debug_print("r.stdev = " + to_string(r.stdev));
-  debug_print("r.time = " + to_string(r.time));
-  debug_print("***");
   assert (range_strs.size() == r.players);
   cout << "Equity between " + to_string(r.players) + " players:" << endl;
   //we are traversing 2 lists at the same time, so we just use an int
   for (unsigned int i = 0; i < r.players; ++i){
-    cout << range_strs.at(i) << ": " + to_string(r.equity[i]) << endl;
+    cout << range_strs.at(i) << ": " << output_round(r.equity[i], true)
+         << "%" << endl;
   }
-  debug_print("***");
   bool completed = (r.progress >= 1);
   //this is a bootleg way of rounding to the tenths place - there might be
   //a more elegant solution, but this works with the default functions
   //provided in <cmath>
-  double prog_percentage = round(r.progress * 1000) / 10;
-  double err_percentage = round(r.stdev * 1000) / 10;
-  double calc_time = round(r.time * 10) / 10;
-  debug_print("completed = " + to_string(completed));
-  debug_print("prog_percentage = " + to_string(prog_percentage));
-  debug_print("err_percentage = " + to_string(err_percentage));
-  debug_print("calc_time = " + to_string(calc_time));
-  debug_print("***");
-
+  double progress = output_round(r.progress, true);
+  double stdev = r.stdev; //NOT rounded
+  double sim_time = output_round(r.time);
   if (completed){
-    cout << "Calculation completed in " << calc_time << " seconds." << endl;
+    cout << "Calculation completed in " << sim_time << " seconds." << endl;
   } else {
-    cout << "Calculation timed out after " << calc_time << " seconds: "
-            "target margin of error not reached." << endl;
+    cout << "Calculation timed out after " << sim_time << " seconds." << endl;
     if (r.enumerateAll){
+      cout << "Calculation progress: " << progress << "%." << endl;
       cout << "Consider using monte-carlo with --mc" << endl;
+    } else {
+      //stdev is not rounded because it might be very small but nonetheless
+      //relevant.
+      cout << "Standard deviation: " << stdev * 100 << "%." << endl;
     }
   }
 
