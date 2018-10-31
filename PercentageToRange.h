@@ -40,11 +40,11 @@ public:
   percentage is to be rounded to 100%, the next lowest range is returned
   instead: "random" is never returned unless the inputted percentage is
   equal to or greater than 100%.  With an exact tie, return the lower range.*/
-  std::string percentage_to_str(double percentage);
+  std::string percentage_to_str(const double percentage);
 
   /*This method is the save as above, but takes in a string instead, and is
   responsible for performing the conversion from the string to a double.
-  More exceptions are thrown if the conversion somehow fails. */
+  Exceptions are thrown as strings. */
   std::string percentage_to_str(std::string percentage);
 
 private:
