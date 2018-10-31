@@ -11,6 +11,7 @@ simply getting proper option input running. */
 #include <cassert>
 #include <cmath>
 #include "OMPEval/omp/EquityCalculator.h"
+#include "PercentageToRange.h"
 using namespace omp;
 using namespace std;
 
@@ -44,12 +45,35 @@ void debug_print(string debug_check){
 
 /*Takes vector of given strings and returns necessary vector of hand ranges.
 Does all error checking and fails out of program if errors are found.
-A bad range is considered to be the empty range. */
-vector<CardRange> get_ranges_from_argv(const vector<string>& range_strings){
+A bad range is considered to be the empty range.  If maxlen is not a null
+pointer, its contents become the length of the largest modified string. */
+vector<CardRange> get_ranges_from_argv(vector<string>& range_strings,
+                                       size_t *maxlen = nullptr){
   if (range_strings.size() < 2) fail_prog("less than 2 hand ranges");
-  if (range_strings.size() > 10) fail_prog("more than 10 hand ranges");
+  if (range_strings.size() > 6) fail_prog("more than 6 hand ranges");
   vector<CardRange> ranges;
+  PercentageToRange perctor;
+  vector<string> raw_strings;
+
+  //create one vector for the raw strings to be used with EquityCalculator,
+  //and another of formatted strings used in printing.
   for (auto i = range_strings.begin(); i != range_strings.end(); ++i){
+    if ((*i).find("%") != string::npos){
+      string converted_range;
+      try {
+        converted_range = perctor.percentage_to_str(*i);
+      } catch (string e) {
+        fail_prog(e);
+      }
+      raw_strings.push_back(converted_range);
+      *i += " (" + converted_range + ")"; //used for printing
+    } else raw_strings.push_back(*i);
+    if (maxlen != nullptr && (*i).length() > *maxlen){
+      *maxlen = (*i).length();
+    }
+  }
+  //now go through and ensure all ranges are valid before adding them
+  for (auto i = raw_strings.begin(); i != raw_strings.end(); ++i){
     CardRange *cr = new CardRange(*i);
     if (cr->combinations().empty()){
       //empty range, or range resulting from bad string.  fail out
@@ -154,16 +178,12 @@ int main(int argc, char **argv){
   }
 
   //put all remaining ranges into vector of strings
-  vector<string> range_strs;
-  unsigned range_str_max = 0; //size of longest range string
-  for (int i = optind; i < argc; ++i){
-    string range_arg = argv[i];
-    if (range_arg.length() > range_str_max) range_str_max = range_arg.length();
-    range_strs.push_back(range_arg);
-  }
+  vector<string> range_strs; //the strings passed into EquityCalculator
+  for (int i = optind; i < argc; ++i) range_strs.push_back(argv[i]);
 
   //setting values & final error checking
-  vector<CardRange> ranges = get_ranges_from_argv(range_strs);
+  size_t range_str_max = 0;
+  vector<CardRange> ranges = get_ranges_from_argv(range_strs, &range_str_max);
   EquityCalculator eq;
   eq.setTimeLimit(time_max);
 
