@@ -161,4 +161,4 @@ while read p; do
   xdotool key ctrl+v Return
   xdotool windowfocus $pstove
   delay
-done <percentages_rounded.txt
+done <percentages_rounded_2.txt
