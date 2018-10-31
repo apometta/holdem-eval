@@ -5,6 +5,8 @@ the compiler sees this file.  See percentage_to_range.h for details. */
 //To do: fill header comment with implementation explanations
 
 #include "PercentageToRange.h" //has <utility> and <string>
+#include <algorithm>
+#include <cassert>
 #include <iostream> //debugging
 
 /*Constructor: does nothing.  Since ranges is a static, it can't be defined
@@ -12,26 +14,40 @@ in the constructor.  It is hardcoded at the bottom of this file.*/
 PercentageToRange::PercentageToRange() {}
 
 /*Given double input, return the necessary string. */
-double PercentageToRange::percentage_to_str(double percentage){
-  std::cout << "in double perctostr" << std::endl;
-  return 0.6;
+std::string PercentageToRange::percentage_to_str(double percentage){
+  //First check for errors and edge cases
+  if (percentage == 0) return "";
+  else if (percentage < 0){
+    throw std::string("negative percentage range inputted");
+  } else if (percentage > 0 && percentage <= ranges.front().first){
+    return ranges.front().second; //return AA
+  }
+  else if (percentage >= 100) return ranges.back().second; //return random
+
+  //lower_bound gives the first element !< percentage, which is what we want
+  //as an upper bound.  fourth argument is a lambda expression needed by
+  //lower_bound to work between a double and a pair
+  auto upper = std::lower_bound(ranges.begin(), ranges.end(), percentage,
+  [](std::pair<double,std::string> p, double d){
+    return p.first < d;
+  });
+  auto lower = upper - 1;
+
+  if ((upper + 1) == ranges.end()){
+    //percentage is <100% but greater than the next highest - return next
+    //highest range, as per method documentation
+    return (*lower).second; //random - 32o
+  }
+  assert ((percentage > (*lower).first) && ((*upper).first >= percentage));
+  if (((*upper).first - percentage) < (percentage - (*lower).first)){
+    return (*upper).second;
+  } else return (*lower).second;
 }
 
 /*Given string input, return the necessary string. */
 std::string PercentageToRange::percentage_to_str(std::string percentage){
-  std::cout << "in string perctostr" << std::endl;
-  double d = percentage_to_str(0.9);
-  std::cout << "returned by double version: " << d << std::endl;
-  return "fdsa";
-}
-
-//print ranges for debugging
-void PercentageToRange::print_ranges(){
-  std::cout << "Vector ranges in PercentageToRange: " << std::endl;
-  for (auto i = ranges.begin(); i != ranges.end(); ++i){
-    std::cout << (*i).first << " " << (*i).second << std::endl;
-  }
-  std::cout << "Size = " << ranges.size() << std::endl;
+  double d = std::stod(percentage);
+  return percentage_to_str(d);
 }
 
 /*Initialize ranges here.*/
@@ -205,5 +221,5 @@ const std::vector<std::pair<double,std::string>> PercentageToRange::ranges =
   std::make_pair(97.2851, "22+,A2s+,K2s+,Q2s+,J2s+,T2s+,92s+,82s+,72s+,62s+,52s+,42s+,32s,A2o+,K2o+,Q2o+,J2o+,T2o+,92o+,82o+,73o+,63o+,52o+,42o+"),
   std::make_pair(98.19, "22+,A2s+,K2s+,Q2s+,J2s+,T2s+,92s+,82s+,72s+,62s+,52s+,42s+,32s,A2o+,K2o+,Q2o+,J2o+,T2o+,92o+,82o+,73o+,62o+,52o+,42o+"),
   std::make_pair(99.095, "22+,A2s+,K2s+,Q2s+,J2s+,T2s+,92s+,82s+,72s+,62s+,52s+,42s+,32s,A2o+,K2o+,Q2o+,J2o+,T2o+,92o+,82o+,72o+,62o+,52o+,42o+"),
-  std::make_pair(100, "22+,A2s+,K2s+,Q2s+,J2s+,T2s+,92s+,82s+,72s+,62s+,52s+,42s+,32s,A2o+,K2o+,Q2o+,J2o+,T2o+,92o+,82o+,72o+,62o+,52o+,42o+,32o"),
+  std::make_pair(100, "random"),
 };
