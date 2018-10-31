@@ -5,7 +5,7 @@ the compiler sees this file.  See percentage_to_range.h for details. */
 //To do: fill header comment with implementation explanations
 
 #include "PercentageToRange.h" //has <utility> and <string>
-#include <algorithm>
+#include <algorithm> //lower_bound
 #include <cassert>
 #include <iostream> //debugging
 
@@ -14,7 +14,7 @@ in the constructor.  It is hardcoded at the bottom of this file.*/
 PercentageToRange::PercentageToRange() {}
 
 /*Given double input, return the necessary string. */
-std::string PercentageToRange::percentage_to_str(double percentage){
+std::string PercentageToRange::percentage_to_str(const double percentage){
   //First check for errors and edge cases
   if (percentage == 0) return "";
   else if (percentage < 0){
@@ -28,9 +28,7 @@ std::string PercentageToRange::percentage_to_str(double percentage){
   //as an upper bound.  fourth argument is a lambda expression needed by
   //lower_bound to work between a double and a pair
   auto upper = std::lower_bound(ranges.begin(), ranges.end(), percentage,
-  [](std::pair<double,std::string> p, double d){
-    return p.first < d;
-  });
+  [](std::pair<double,std::string> p, double d){ return p.first < d; });
   auto lower = upper - 1;
 
   if ((upper + 1) == ranges.end()){
@@ -46,7 +44,31 @@ std::string PercentageToRange::percentage_to_str(double percentage){
 
 /*Given string input, return the necessary string. */
 std::string PercentageToRange::percentage_to_str(std::string percentage){
-  double d = std::stod(percentage);
+  //Given what's happening in term-heval, we know the string contains the %
+  //symbol, and has no whitespace.  If the conversion succeeds but there is
+  //anything other than % signs, we complain
+  double d; std::size_t trail_pos;
+  try {
+    d = std::stod(percentage, &trail_pos);
+    //We throw these to the calling function so the calling function can
+    //handle error outputting, but we catch and rethrow here just in case the
+    //calling function doesn't catch it, we still exit with thrown exception
+  } catch (std::out_of_range oor){
+    throw std::string("percentage range " + percentage + " out of range");
+  } catch (std::invalid_argument ia){
+    throw std::string("percentage range " + percentage + " invalid");
+  }
+
+  std::string trail = percentage.substr(trail_pos);
+  if (trail == "" || trail[0] != '%'){ //there's no percentage sign, or there
+  //is something between the number and percentage sign
+    throw std::string("percentage range " + percentage + " invalid");
+  }
+  trail.erase(std::remove(trail.begin(), trail.end(), '%'), trail.end());
+  if (trail != ""){ //something after the percentage sign
+    throw std::string("percentage range " + percentage + " invalid");
+  }
+  //we now have a valid double
   return percentage_to_str(d);
 }
 
