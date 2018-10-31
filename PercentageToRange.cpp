@@ -43,7 +43,7 @@ std::string PercentageToRange::percentage_to_str(const double percentage){
 }
 
 /*Given string input, return the necessary string. */
-std::string PercentageToRange::percentage_to_str(std::string percentage){
+std::string PercentageToRange::percentage_to_str(const std::string percentage){
   //Given what's happening in term-heval, we know the string contains the %
   //symbol, and has no whitespace.  If the conversion succeeds but there is
   //anything other than % signs, we complain

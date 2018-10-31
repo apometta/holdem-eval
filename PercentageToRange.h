@@ -45,7 +45,7 @@ public:
   /*This method is the save as above, but takes in a string instead, and is
   responsible for performing the conversion from the string to a double.
   Exceptions are thrown as strings. */
-  std::string percentage_to_str(std::string percentage);
+  std::string percentage_to_str(const std::string percentage);
 
 private:
     //the data itself
