@@ -12,14 +12,6 @@ LIB = OMPEval/lib
 ARCH = $(LIB)/ompeval.a
 EXEC = term-heval
 
-#These two parts of the project do not have their dependencies included in
-#the git repository, since they were not intended to be seen by the user.
-#They were used for clerical/testing purposes only.
-#Testy was a in-between program I used to generate certain files.
-TSRC = testy.cpp
-#The perctor driver was a program I used to test the percentagetorange class.
-DSRC = PercentageToRange.cpp perctor_driver.cpp
-
 #Compiles main executable and its various parts
 all: $(EXEC)
 
@@ -33,10 +25,4 @@ $(LIB):
 	mkdir $@
 
 clean:
-	$(RM) $(EXEC) $(ARCH) $(LIB) $(OMPEOBJ) testy
-
-testy: $(TSRC) $(ARCH)
-	$(CXX) $(CXXFLAGS) -o $@ $^
-
-driver: $(DSRC)
-	$(CXX) $(CXXFLAGS) -o perctor-driver $^
+	$(RM) $(EXEC) $(ARCH) $(LIB) $(OMPEOBJ)
