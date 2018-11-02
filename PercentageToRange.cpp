@@ -1,18 +1,21 @@
 /*This file, written by Andrew H. Pometta, implements the PercentageToRange
-class specified in percentage_to_range.h.  To build and run term-heval, ensure
-the compiler sees this file.  See percentage_to_range.h for details. */
+class specified in percentage_to_range.h.  The Makefile for this project
+has this file listed as a source for building: to build manually, ensure
+this file is seen and linked to by the compiler.  For usage details, see
+PercentageToRange.h.  */
 
-//To do: fill header comment with implementation explanations
-
-#include "PercentageToRange.h" //has <utility> and <string>
+#include "PercentageToRange.h" //has <utility>, <string> and <vector>
 #include <algorithm> //lower_bound
 #include <cassert>
 
 /*Constructor: does nothing.  Since ranges is a static, it can't be defined
-in the constructor.  It is hardcoded at the bottom of this file.*/
+in the constructor.  It is hardcoded at the bottom of this file.  The
+object itself, as a result, doesn't need to be instantiated with the keyword
+new: PercentageToRange perctor; would be enough to do anything needed. */
 PercentageToRange::PercentageToRange() {}
 
-/*Given double input, return the necessary string. */
+/*Given double input, return the necessary string.  See the method in
+PercentageToRange.h for details and return value. */
 std::string PercentageToRange::percentage_to_str(const double percentage){
   //First check for errors and edge cases
   if (percentage == 0) return "";
@@ -28,20 +31,31 @@ std::string PercentageToRange::percentage_to_str(const double percentage){
   //lower_bound to work between a double and a pair
   auto upper = std::lower_bound(ranges.begin(), ranges.end(), percentage,
   [](std::pair<double,std::string> p, double d){ return p.first < d; });
+  //Since we know from above that percentage is greater than the first element
+  //in the list, this is guaranteed to work, i.e. upper isn't ranges.begin()
   auto lower = upper - 1;
-
   if ((upper + 1) == ranges.end()){
     //percentage is <100% but greater than the next highest - return next
     //highest range, as per method documentation
     return (*lower).second; //random - 32o
   }
+  //sanity check
   assert ((percentage > (*lower).first) && ((*upper).first >= percentage));
+
+  //Note that the rounding that occurs here can differ from Pokerstove (where
+  //the ranges were gotten from) at various percentages, most likely due to
+  //Pokerstove taking into account the combination difference between each
+  //interval.  However, these differences are unlikely to significantly matter.
+  //If the user is so concerned about 0.09% making a one-hand difference in
+  //the range affecting their equity calculation, they can input the range
+  //manually
   if (((*upper).first - percentage) < (percentage - (*lower).first)){
     return (*upper).second;
   } else return (*lower).second;
 }
 
-/*Given string input, return the necessary string. */
+/*Given string input, return the necessary string.  See the method in
+PercentageToRange.h for details and return value. */
 std::string PercentageToRange::percentage_to_str(const std::string percentage){
   //Given what's happening in term-heval, we know the string contains the %
   //symbol, and has no whitespace.  If the conversion succeeds but there is
@@ -49,29 +63,40 @@ std::string PercentageToRange::percentage_to_str(const std::string percentage){
   double d; std::size_t trail_pos;
   try {
     d = std::stod(percentage, &trail_pos);
-    //We throw these to the calling function so the calling function can
-    //handle error outputting, but we catch and rethrow here just in case the
-    //calling function doesn't catch it, we still exit with thrown exception
+    //We catch exceptions here because we don't "trust" the program calling
+    //this method to necessarily do it themselves, but throw them as our
+    //own errors to display the problem easily
   } catch (std::out_of_range oor){
     throw std::string("percentage range " + percentage + " out of range");
   } catch (std::invalid_argument ia){
+    //This will occurr if there is anything before the number itself, e.g.
+    //input "fdssa60%"
     throw std::string("percentage range " + percentage + " invalid");
   }
 
-  std::string trail = percentage.substr(trail_pos);
-  if (trail == "" || trail[0] != '%'){ //there's no percentage sign, or there
-  //is something between the number and percentage sign
+  std::string trail = percentage.substr(trail_pos); //what's leftover
+  if (trail == "" || trail[0] != '%'){
+    //Either there is no percentage sign in the string, or there is something
+    //between the number converted and the percent sign, e.g. input
+    //"60" or "60fdsa%"
     throw std::string("percentage range " + percentage + " invalid");
   }
   trail.erase(std::remove(trail.begin(), trail.end(), '%'), trail.end());
-  if (trail != ""){ //something after the percentage sign
+  if (trail != ""){
+    //After removing the percentage signs, if there is anything leftover,
+    //then we complain nonetheless: this is done to ensure accidental inputs
+    //aren't counted.  e.g. input "60%fdsa"
     throw std::string("percentage range " + percentage + " invalid");
   }
-  //we now have a valid double
+
+  //Note that we do allow multiple percentage signs, e.g. input "60%%%" is
+  //valid input.
   return percentage_to_str(d);
 }
 
-/*Initialize ranges here.*/
+/*Initialize ranges here.  For details on why these values were used, see
+the Readme.  For an explanation of how these were acquired, see
+.range_string_acq.sh. */
 const std::vector<std::pair<double,std::string>> PercentageToRange::ranges =
 {
   std::make_pair(0.452489, "AA"),

@@ -1,7 +1,7 @@
 /*This file, written by Andrew H. Pometta, exports the PercentageToRange class,
 which takes in the percentage passed into it by the term-heval main
 implementation file and gives back the string corresponding to the range
-represented by that percentage.
+represented by that percentage.  It is implemented in PercentageToRange.cpp.
 
 To use this class, simply create and run percentage_to_str on whatever
 percentage to receive the string corresponding to the range.  The function is
