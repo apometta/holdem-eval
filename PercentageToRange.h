@@ -4,7 +4,10 @@ implementation file and gives back the string corresponding to the range
 represented by that percentage.
 
 To use this class, simply create and run percentage_to_str on whatever
-percentage to receive the string corresponding to the range.
+percentage to receive the string corresponding to the range.  The function is
+overloaded, so you can input either a double or a string: just ensure that the
+value input is a percentage and not the raw proportion (i.e. 45% instead of
+0.45).  Exceptions are thrown as std::string.
 
 Even though only one object of this class should ever be used, it is still a
 good idea to use OOP to do it.  See the following:
@@ -44,14 +47,15 @@ public:
 
   /*This method is the save as above, but takes in a string instead, and is
   responsible for performing the conversion from the string to a double.
-  Exceptions are thrown as strings. */
+  Exceptions are thrown as strings.  This also does it's own error checking
+  for strings, so strings can be input straight from argv in the main
+  program. */
   std::string percentage_to_str(const std::string percentage);
 
 private:
-    //the data itself
+    /*The vector of pairs, corresponding to a percentage and a string for the
+    range. */
     static const std::vector<std::pair<double,std::string>> ranges;
-    //add more later if needed
-
 };
 
 #endif
