@@ -16,7 +16,6 @@ using namespace omp;
 using namespace std;
 
 /*OPTIONS:
---debug: debug.  don't use.  prints debug information
 -b, --board: board.  one string.  default empty
 -d, --dead: dead.  one string  default empty.
 --mc, --monte-carlo: mc simulation.  default false.
@@ -27,20 +26,11 @@ using namespace std;
 -h, --help: print help information
 */
 
-bool debug = false; //debug flag
-
 /*Fails the program after printing specified error message.  Sets exit status,
 which by default is EXIT_FAILURE. */
 void fail_prog(string err_report, int status = EXIT_FAILURE){
   cerr << "term-heval: error: " << err_report << "." << endl;
   exit(status);
-}
-
-/*Prints specified string if debug flag is specified, otherwise does nothing.
-Saves a lot of space putting the check here.*/
-void debug_print(string debug_check){
-  if (!debug) return;
-  cerr << debug_check << endl;
 }
 
 /*Takes vector of given strings and returns necessary vector of hand ranges.
@@ -81,7 +71,6 @@ vector<CardRange> get_ranges_from_argv(vector<string>& range_strings,
     }
     ranges.push_back(*cr);
     delete cr; //avoid memory leaks.  this doesn't compromise ranges
-    debug_print("Range added: " + *i);
   }
   return ranges;
 }
@@ -111,7 +100,6 @@ int main(int argc, char **argv){
   bool monte_carlo = false;
   double err_margin = 1e-4; double time_max = 30;
   static struct option long_options[] = {
-    {"debug", no_argument, 0, '0'},
     {"board", required_argument, 0, 'b'},
     {"dead", required_argument, 0, 'd'},
     {"mc", no_argument, 0, 'm'},
@@ -126,9 +114,6 @@ int main(int argc, char **argv){
   while ((opt_character = getopt_long(argc, argv, "0b:d:me:t:h", long_options,
     nullptr)) != -1){
     switch(opt_character){
-      case '0': //if --debug is set, it should be set first.
-        debug = true;
-        break;
       case 'b':
         board = get_cardmask(optarg, true);
         break;
