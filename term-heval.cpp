@@ -1,6 +1,9 @@
 /*This file, written by Andrew H. Pometta, is the main implementation file
-for the term-heval program.  It is in the testing phase: at the moment, we are
-simply getting proper option input running. */
+for the term-heval program.  It utilizes the OMPEval library to run poker
+equity analysis on inputted ranges.  It is effectively a wrapper around that
+library, for usage with a Unix terminal shell.  See README.md for more
+information.  This is the main file for the program, which contains the main
+function. */
 
 #include <iostream>
 #include <iomanip> //print formatting
@@ -15,7 +18,7 @@ simply getting proper option input running. */
 using namespace omp;
 using namespace std;
 
-string progname;
+string progname; //global scope to be accessed outside of main
 
 /*Fails the program after printing specified error message.  Sets exit status,
 which by default is EXIT_FAILURE. */
