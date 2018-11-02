@@ -3,33 +3,24 @@ for the term-heval program.  It is in the testing phase: at the moment, we are
 simply getting proper option input running. */
 
 #include <iostream>
-#include <iomanip>
+#include <iomanip> //print formatting
 #include <cstdlib>
-#include <unistd.h>
-#include <getopt.h>
+#include <unistd.h> //getopt
+#include <getopt.h>  //getopt_long
 #include <stdexcept>
 #include <cassert>
-#include <cmath>
+//#include <cmath> //round
 #include "OMPEval/omp/EquityCalculator.h"
 #include "PercentageToRange.h"
 using namespace omp;
 using namespace std;
 
-/*OPTIONS:
--b, --board: board.  one string.  default empty
--d, --dead: dead.  one string  default empty.
---mc, --monte-carlo: mc simulation.  default false.
--e, --margin, --stderr: margin of error.  expects a double. default 0.01%
-                        use 0 for infinite, does nothing without --mc
--t, --time: maximum time to calculate for in seconds.  default 30,
-            0 for infinite calculation (use at your own risk)
--h, --help: print help information
-*/
+string progname;
 
 /*Fails the program after printing specified error message.  Sets exit status,
 which by default is EXIT_FAILURE. */
 void fail_prog(string err_report, int status = EXIT_FAILURE){
-  cerr << "term-heval: error: " << err_report << "." << endl;
+  cerr << progname << ": error: " << err_report << endl;
   exit(status);
 }
 
@@ -48,25 +39,28 @@ vector<CardRange> get_ranges_from_argv(vector<string>& range_strings,
   //create one vector for the raw strings to be used with EquityCalculator,
   //and another of formatted strings used in printing.
   for (auto i = range_strings.begin(); i != range_strings.end(); ++i){
-    if ((*i).find("%") != string::npos){
+    if ((*i).find("%") != string::npos){ //if the range is a percentage
       string converted_range;
       try {
         converted_range = perctor.percentage_to_str(*i);
-      } catch (string e) {
+      } catch (string e) { //PercentageToRange throws errors as a std::string
         fail_prog(e);
       }
       raw_strings.push_back(converted_range);
       *i += " (" + converted_range + ")"; //used for printing
-    } else raw_strings.push_back(*i);
+    }
+    else raw_strings.push_back(*i);
+
     if (maxlen != nullptr && (*i).length() > *maxlen){
       *maxlen = (*i).length();
     }
-  }
+
   //now go through and ensure all ranges are valid before adding them
   for (auto i = raw_strings.begin(); i != raw_strings.end(); ++i){
     CardRange *cr = new CardRange(*i);
     if (cr->combinations().empty()){
       //empty range, or range resulting from bad string.  fail out
+      delete cr;
       fail_prog("range " + *i + " invalid");
     }
     ranges.push_back(*cr);
@@ -95,10 +89,22 @@ uint64_t get_cardmask(string cards, bool board = false){
 }
 
 int main(int argc, char **argv){
-  //Option gathering
+  progname = argv[0];
   uint64_t board = 0; uint64_t dead = 0;
   bool monte_carlo = false;
   double err_margin = 1e-4; double time_max = 30;
+
+  //Option gathering
+  /*OPTIONS:
+  -b, --board: board.  one string.  default empty
+  -d, --dead: dead.  one string  default empty.
+  --mc, --monte-carlo: mc simulation.  default false.
+  -e, --margin, --stderr: margin of error.  expects a double. default 0.01%
+                          use 0 for infinite, does nothing without --mc
+  -t, --time: maximum time to calculate for in seconds.  default 30,
+              0 for infinite calculation (use at your own risk)
+  -h, --help: print help information
+  */
   static struct option long_options[] = {
     {"board", required_argument, 0, 'b'},
     {"dead", required_argument, 0, 'd'},
@@ -108,10 +114,10 @@ int main(int argc, char **argv){
     {"stderr", required_argument, 0, 'e'}, //same as --margin
     {"time", required_argument, 0, 't'},
     {"help", no_argument, 0, 'h'},
-    {0, 0, 0, 0}
+    {0, 0, 0, 0} //required by getopt_long
   };
   int opt_character;
-  while ((opt_character = getopt_long(argc, argv, "0b:d:me:t:h", long_options,
+  while ((opt_character = getopt_long(argc, argv, "b:d:me:t:h", long_options,
     nullptr)) != -1){
     switch(opt_character){
       case 'b':
@@ -166,14 +172,16 @@ int main(int argc, char **argv){
   vector<string> range_strs; //the strings passed into EquityCalculator
   for (int i = optind; i < argc; ++i) range_strs.push_back(argv[i]);
 
-  //setting values & final error checking
+  //Set the ranges & final error checking.  Note that the vector of strings
+  //is modified by get_ranges_from_argv so that the strings are viable for
+  //printing.
   size_t range_str_max = 0;
   vector<CardRange> ranges = get_ranges_from_argv(range_strs, &range_str_max);
+
+  //Run equity calculation.  monte-carlo is the default evaluation method
+  //by the library, so we falsify our boolean
   EquityCalculator eq;
   eq.setTimeLimit(time_max);
-
-  //running equity calculator
-  //monte carlo is the default, falsify for enumeration
   eq.start(ranges, board, dead, !monte_carlo, err_margin);
   eq.wait();
 
