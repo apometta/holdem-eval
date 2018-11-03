@@ -3,7 +3,20 @@ for the term-heval program.  It utilizes the OMPEval library to run poker
 equity analysis on inputted ranges.  It is effectively a wrapper around that
 library, for usage with a Unix terminal shell.  See README.md for more
 information.  This is the main file for the program, which contains the main
-function. */
+function.
+
+TO DO: set exit statuses, pass arguments into error printing
+
+Exit statuses:
+0: EXIT_SUCCESS
+Options errors
+1: Invalid board/dead input
+2: Invalid error/time input
+3: Infinite simulation requested (--mc -t 0 -e 0)
+Range/Game errors
+4: Too few/too many ranges
+5: Range invalid
+6: Range conflict (with board or dead)*/
 
 #include <iostream>
 #include <iomanip> //print formatting
@@ -96,16 +109,18 @@ This is used for setting board and dead, and also checks for errors.
 An optional boolean argument, board, is used when checking for the board,
 which has stricter standards (i.e. card maximum).*/
 uint64_t get_cardmask(string cards, bool board = false){
+  //While a valid board with <=5 cards might have a string longer than 10
+  //characters, it would only do so by accident (e.g. "Ts5cQh9s2d,,,,")
+  //If this is the case, we can still return invalid board
+  if (cards.length() > 10){
+    fail_prog("invalid board argument");
+  }
   //We need to ensure that the string is valid, i.e. check the bitmask.
   uint64_t bitmask = CardRange::getCardMask(cards);
   if (bitmask == 0){
     if (board) fail_prog("invalid board argument");
     else fail_prog("invalid dead argument");
   }
-  //if there are more than 10 chars in board, then the board has more than
-  //5 cards, which is too large.  it's possible the user inputted too many
-  //on accident, but we will simply have to fail out here
-  if (board && cards.length() > 10) fail_prog("board has too many cards");
   return bitmask;
 }
 
@@ -206,13 +221,22 @@ int main(int argc, char **argv){
   //by the library, so we falsify our boolean
   EquityCalculator eq;
   eq.setTimeLimit(time_max);
-  eq.start(ranges, board, dead, !monte_carlo, err_margin);
+  //Before we call eq.wait(), we make sure that eq doesn't just bail out on us
+  //If start returns false, something went wrong
+  if (!eq.start(ranges, board, dead, !monte_carlo, err_margin)){
+    //There are a number of errors that could cause this, but with the ones
+    //we've filtered out so far with our program, this can only be one thing:
+    //A range conflict.  A dead card is in someone's range, on the board,
+    //or the same card is in two people's hand/in a hand and on the board
+    fail_prog("range conflict");
+  }
   eq.wait();
 
   //printing results
   cout << fixed; //always 2 digits to the right of the decimal point
   cout.precision(2);
   auto r = eq.getResults();
+  cerr << "r.players = " << r.players << endl;
   assert (range_strs.size() == r.players);
   cout << "Equity between " + to_string(r.players) + " players:" << endl;
   cout << "***" << endl;
