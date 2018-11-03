@@ -1,6 +1,15 @@
 #This Makefile, written by Andrew H. Pometta, is the Makefile for the
 #term-heval project.  It compiles the main executable from the source.
 
+#To build the program, simply use "make" as the target in the directory
+#with this Makefile.  The executable and all necessary dependencies should
+#be compiled and built - the executable is "term-heval", which can be run
+#in the directory with the command "./term-heval ...".  See README.md or run
+#"./term-heval -h" for more information.
+
+#To remove all file and the executable, run "make clean".  To remove all
+#dependencies that are not the executable, run "make clean-dependencies".
+
 CXX = g++
 CXXFLAGS += -O3 -std=c++11 -Wall -Wpedantic -pthread
 RM = rm -rf
@@ -24,5 +33,8 @@ $(ARCH): $(OMPEOBJ) | $(LIB)
 $(LIB):
 	mkdir $@
 
-clean:
-	$(RM) $(EXEC) $(ARCH) $(LIB) $(OMPEOBJ)
+clean: clean-dependencies
+	$(RM) $(EXEC)
+
+clean-dependencies:
+	$(RM) $(ARCH) $(LIB) $(OMPEOBJ)
