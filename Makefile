@@ -21,7 +21,6 @@ LIB = OMPEval/lib
 ARCH = $(LIB)/ompeval.a
 EXEC = term-heval
 
-#Compiles main executable and its various parts
 all: $(EXEC)
 
 $(EXEC): $(MSRC) $(ARCH)
