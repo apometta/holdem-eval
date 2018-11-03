@@ -7,6 +7,7 @@ PercentageToRange.h.  */
 #include "PercentageToRange.h" //has <utility>, <string> and <vector>
 #include <algorithm> //lower_bound
 #include <cassert>
+#include <stdexcept>
 
 /*Constructor: does nothing.  Since ranges is a static, it can't be defined
 in the constructor.  It is hardcoded at the bottom of this file.  The
