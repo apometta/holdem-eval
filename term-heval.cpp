@@ -20,10 +20,27 @@ using namespace std;
 
 string progname; //global scope to be accessed outside of main
 
+/*Prints usage information for the program, to be used with -h.  Prints to
+std::cerr by default, but can be changed with optional argument. */
+void print_usage(ostream& outs = cerr){
+  outs << "usage: " << progname << " [-b board] [-d dead] [--mc] ";
+  outs << "[-e error] [-t time] range1 range2 [range3...]" << endl;
+  outs << "\tboard: the board cards (e.g. Th9s2c)" << endl;
+  outs << "\tdead: the dead cards (e.g. Ad2s)" << endl;
+  outs << "\tmc: enable monte-carlo evaluation" << endl;
+  outs << "\te: margin of error, as proportion or percentage" << endl;
+  outs << "\tt: maximum time for evaluation (0 for infinite)" << endl;
+  outs << "\trange1, range2, etc.: range to be included in analysis" << endl;
+  outs << "\tMaximum of 6 total ranges" << endl;
+  outs << "See README.md for details" << endl;
+}
+
 /*Fails the program after printing specified error message.  Sets exit status,
 which by default is EXIT_FAILURE. */
-void fail_prog(string err_report, int status = EXIT_FAILURE){
+void fail_prog(string err_report, bool usage = false,
+               int status = EXIT_FAILURE){
   cerr << progname << ": error: " << err_report << endl;
+  if (usage) print_usage();
   exit(status);
 }
 
@@ -57,6 +74,7 @@ vector<CardRange> get_ranges_from_argv(vector<string>& range_strings,
     if (maxlen != nullptr && (*i).length() > *maxlen){
       *maxlen = (*i).length();
     }
+  }
 
   //now go through and ensure all ranges are valid before adding them
   for (auto i = raw_strings.begin(); i != raw_strings.end(); ++i){
@@ -161,8 +179,11 @@ int main(int argc, char **argv){
         }
         break;
       }
-      case 'h':
-        break;
+      case 'h': //since this is the expected result, the usage printing
+                //prints to cout
+      print_usage(cout);
+      exit(EXIT_SUCCESS);
+      break;
     }
   }
   //make sure running is non-infinite
