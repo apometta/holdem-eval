@@ -12,6 +12,7 @@
 #include <mutex>
 #include <atomic>
 #include <unordered_map>
+#include <functional>
 #include <array>
 #include <cstdint>
 
