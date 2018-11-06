@@ -135,7 +135,7 @@ uint64_t get_cardmask(string cards, bool board = false){
 int main(int argc, char **argv){
   progname = argv[0];
   uint64_t board = 0; uint64_t dead = 0;
-  bool monte_carlo = false;
+  bool monte_carlo = false; bool print_advanced_info = false;
   double err_margin = 1e-4; double time_max = 30;
 
   //Option gathering
@@ -158,10 +158,11 @@ int main(int argc, char **argv){
     {"stderr", required_argument, 0, 'e'}, //same as --margin
     {"time", required_argument, 0, 't'},
     {"help", no_argument, 0, 'h'},
+    {"advanced", no_argument, 0, 'a'},
     {0, 0, 0, 0} //required by getopt_long
   };
   int opt_character;
-  while ((opt_character = getopt_long(argc, argv, "b:d:me:t:h", long_options,
+  while ((opt_character = getopt_long(argc, argv, "b:d:me:t:ha", long_options,
     nullptr)) != -1){
     switch(opt_character){
       case 'b':
@@ -208,11 +209,15 @@ int main(int argc, char **argv){
         print_usage(cout);
         exit(EXIT_SUCCESS);
         break;
+      case 'a':
+        print_advanced_info = true;
+        break;
       default:
         //getopt actually prints the error message for us so we don't need to
         //./term-heval: invalid option -- '(option)'
         print_usage(cerr);
         exit(4);
+        break; //cleaner
     }
   }
   //make sure running is non-infinite
@@ -250,7 +255,6 @@ int main(int argc, char **argv){
   cout << fixed; //always 2 digits to the right of the decimal point
   cout.precision(2);
   auto r = eq.getResults();
-  cerr << "r.players = " << r.players << endl;
   assert (range_strs.size() == r.players);
   cout << "Equity between " + to_string(r.players) + " players:" << endl;
   cout << "***" << endl;
@@ -273,8 +277,27 @@ int main(int argc, char **argv){
       cout << defaultfloat; //reset fixed marker
       cout.precision(6); //default precision
       cout << "Standard deviation: " << r.stdev * 100 << "%." << endl;
+      cout << fixed; //reset printing variables
+      cout.precision(2);
     }
   }
+
+  if (print_advanced_info){
+    double eval_pfc =
+      (static_cast<double>(r.evaluatedPreflopCombos) / r.preflopCombos) * 100;
+    double showdown =
+      (static_cast<double>(r.evaluations) / r.hands) * 100;
+
+    cout << r.hands << " hands evaluated at " << r.speed << " hands/s."
+         << endl;
+
+    cout << r.evaluatedPreflopCombos << " of " << r.preflopCombos << " ("
+         << eval_pfc << "%) preflop combinations evaluated." << endl;
+
+    cout << r.evaluations << " (" << showdown << "%) of hands reached showdown"
+         << endl;
+
+    cout << "Standard deviation: " << r.stdev << endl;
 
   return EXIT_SUCCESS;
 }
