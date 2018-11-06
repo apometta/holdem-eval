@@ -1,5 +1,5 @@
 /*This file, written by Andrew H. Pometta, is the main implementation file
-for the omp-eval program.  It utilizes the OMPEval library to run poker
+for the holdem-eval program.  It utilizes the OMPEval library to run poker
 equity analysis on inputted ranges.  It is effectively a wrapper around that
 library, for usage with a Unix terminal shell.  See README.md for more
 information.  This is the main file for the program, which contains the main
@@ -215,7 +215,7 @@ int main(int argc, char **argv){
         break;
       default:
         //getopt actually prints the error message for us so we don't need to
-        //./omp-eval: invalid option -- '(option)'
+        //./holdem-eval: invalid option -- '(option)'
         print_usage(cerr);
         exit(4);
         break; //cleaner
