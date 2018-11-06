@@ -13,10 +13,12 @@ Options errors
 1: Invalid board/dead input
 2: Invalid error/time input
 3: Infinite simulation requested (--mc -t 0 -e 0)
+4: Invalid option
 Range/Game errors
-4: Too few/too many ranges
-5: Range invalid
-6: Range conflict (with board or dead)*/
+5: Too few/too many ranges
+6: Range invalid
+7: Percentage range input invalid
+8: Range conflict (with board or dead)*/
 
 #include <iostream>
 #include <iomanip> //print formatting
@@ -36,22 +38,24 @@ string progname; //global scope to be accessed outside of main
 /*Prints usage information for the program, to be used with -h.  Prints to
 std::cerr by default, but can be changed with optional argument. */
 void print_usage(ostream& outs = cerr){
-  outs << "usage: " << progname << " [-b board] [-d dead] [--mc] ";
+  outs << "usage: " << progname << " [--mc] [-b board] [-d dead] ";
   outs << "[-e error] [-t time] range1 range2 [range3...]" << endl;
+  outs << "\tmc: enable monte-carlo evaluation" << endl;
   outs << "\tboard: the board cards (e.g. Th9s2c)" << endl;
   outs << "\tdead: the dead cards (e.g. Ad2s)" << endl;
-  outs << "\tmc: enable monte-carlo evaluation" << endl;
   outs << "\te: margin of error, as proportion or percentage" << endl;
   outs << "\tt: maximum time for evaluation (0 for infinite)" << endl;
   outs << "\trange1, range2, etc.: range to be included in analysis" << endl;
   outs << "\tMaximum of 6 total ranges" << endl;
+  outs << "\tRanges can be input in EquiLab/Pokerstove syntax";
+  outs << " (e.g. QQ+,AKs) or as percentages (e.g. 1.3%)" << endl;
   outs << "See README.md for details" << endl;
 }
 
 /*Fails the program after printing specified error message.  Sets exit status,
 which by default is EXIT_FAILURE. */
-void fail_prog(string err_report, bool usage = false,
-               int status = EXIT_FAILURE){
+void fail_prog(string err_report, int status = EXIT_FAILURE,
+               bool usage = false){
   cerr << progname << ": error: " << err_report << endl;
   if (usage) print_usage();
   exit(status);
@@ -63,8 +67,12 @@ A bad range is considered to be the empty range.  If maxlen is not a null
 pointer, its contents become the length of the largest modified string. */
 vector<CardRange> get_ranges_from_argv(vector<string>& range_strings,
                                        size_t *maxlen = nullptr){
-  if (range_strings.size() < 2) fail_prog("less than 2 hand ranges");
-  if (range_strings.size() > 6) fail_prog("more than 6 hand ranges");
+  if (range_strings.size() < 2){
+    fail_prog("less than 2 hand ranges", 5, true);
+  }
+  if (range_strings.size() > 6){
+    fail_prog("more than 6 hand ranges", 5, true);
+  }
   vector<CardRange> ranges;
   PercentageToRange perctor;
   vector<string> raw_strings;
@@ -77,7 +85,7 @@ vector<CardRange> get_ranges_from_argv(vector<string>& range_strings,
       try {
         converted_range = perctor.percentage_to_str(*i);
       } catch (string e) { //PercentageToRange throws errors as a std::string
-        fail_prog(e);
+        fail_prog(e, 7, false);
       }
       raw_strings.push_back(converted_range);
       *i += " (" + converted_range + ")"; //used for printing
@@ -95,7 +103,7 @@ vector<CardRange> get_ranges_from_argv(vector<string>& range_strings,
     if (cr->combinations().empty()){
       //empty range, or range resulting from bad string.  fail out
       delete cr;
-      fail_prog("range " + *i + " invalid");
+      fail_prog("range " + *i + " invalid", 6, false);
     }
     ranges.push_back(*cr);
     delete cr; //avoid memory leaks.  this doesn't compromise ranges
@@ -113,13 +121,13 @@ uint64_t get_cardmask(string cards, bool board = false){
   //characters, it would only do so by accident (e.g. "Ts5cQh9s2d,,,,")
   //If this is the case, we can still return invalid board
   if (cards.length() > 10){
-    fail_prog("invalid board argument");
+    fail_prog("invalid board argument " + cards, 1, false);
   }
   //We need to ensure that the string is valid, i.e. check the bitmask.
   uint64_t bitmask = CardRange::getCardMask(cards);
   if (bitmask == 0){
-    if (board) fail_prog("invalid board argument");
-    else fail_prog("invalid dead argument");
+    if (board) fail_prog("invalid board argument " + cards, 1, false);
+    else fail_prog("invalid dead argument " + cards, 1, false);
   }
   return bitmask;
 }
@@ -176,9 +184,9 @@ int main(int argc, char **argv){
             err_margin /= 100; //error margin inputted as a percentage
           }
         } catch (out_of_range oor) {
-          fail_prog("Error margin out of range");
+          fail_prog("Error margin " + cpp_err + " out of range", 2, false);
         } catch (invalid_argument ia) {
-          fail_prog("Invalid error margin argument");
+          fail_prog("Invalid error margin argument " + cpp_err, 2, false);
         }
         break;
       }
@@ -188,23 +196,29 @@ int main(int argc, char **argv){
         try {
           time_max = stod(cpp_time);
         } catch (out_of_range oor) {
-          fail_prog("Maximum time out of range (use -t 0 for no time limit)");
+          fail_prog("Maximum time " + cpp_time + " out of range " +
+                    "(use -t 0 for no time limit)", 2, false);
         } catch (invalid_argument ia) {
-          fail_prog("Invalid maximum time argument");
+          fail_prog("Invalid maximum time argument " + cpp_time, 2, false);
         }
         break;
       }
       case 'h': //since this is the expected result, the usage printing
                 //prints to cout
-      print_usage(cout);
-      exit(EXIT_SUCCESS);
-      break;
+        print_usage(cout);
+        exit(EXIT_SUCCESS);
+        break;
+      default:
+        //getopt actually prints the error message for us so we don't need to
+        //./term-heval: invalid option -- '(option)'
+        print_usage(cerr);
+        exit(4);
     }
   }
   //make sure running is non-infinite
   if (monte_carlo && (err_margin == 0) && (time_max == 0)){
     fail_prog("infinite simulation queried (set time limit, error margin"
-              " or disable monte-carlo)");
+              " or disable monte-carlo)", 3, false);
   }
 
   //put all remaining ranges into vector of strings
@@ -228,7 +242,7 @@ int main(int argc, char **argv){
     //we've filtered out so far with our program, this can only be one thing:
     //A range conflict.  A dead card is in someone's range, on the board,
     //or the same card is in two people's hand/in a hand and on the board
-    fail_prog("range conflict");
+    fail_prog("range conflict with dead, board, or other range", 8, false);
   }
   eq.wait();
 
