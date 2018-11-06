@@ -5,20 +5,19 @@ library, for usage with a Unix terminal shell.  See README.md for more
 information.  This is the main file for the program, which contains the main
 function.
 
-TO DO: set exit statuses, pass arguments into error printing
+The exit statuses returned by the program are as follows:
+0: success, meaning evaluation was reached and attempted.
+1: invalid board or dead argument.
+2: invalid error margin or time maximum argument.
+3: infinite evaluation queried (no time maximum, monte-carlo perfect eval)
+4: unknown argument detected
+5: too many or too few hand ranges inputted
+6: invalid range input
+7: invalid percentage range input
+8: range conflict (i.e. the situation is not possible with a single deck)
 
-Exit statuses:
-0: EXIT_SUCCESS
-Options errors
-1: Invalid board/dead input
-2: Invalid error/time input
-3: Infinite simulation requested (--mc -t 0 -e 0)
-4: Invalid option
-Range/Game errors
-5: Too few/too many ranges
-6: Range invalid
-7: Percentage range input invalid
-8: Range conflict (with board or dead)*/
+Note that the program timing out during the evaluation is not considered
+a failure, and EXIT_SUCCESS (0) is still returned. */
 
 #include <iostream>
 #include <iomanip> //print formatting
@@ -38,8 +37,10 @@ string progname; //global scope to be accessed outside of main
 /*Prints usage information for the program, to be used with -h.  Prints to
 std::cerr by default, but can be changed with optional argument. */
 void print_usage(ostream& outs = cerr){
-  outs << "usage: " << progname << " [--mc] [-b board] [-d dead] ";
-  outs << "[-e error] [-t time] range1 range2 [range3...]" << endl;
+  outs << "usage: " << progname << " [-h] [-a] [--mc] [-b board] [-d dead] "
+       << "[-e error] [-t time] range1 range2 [range3...]" << endl;
+  outs << "\th: print help information" << endl;
+  outs << "\ta: print advanced statistics" << endl;
   outs << "\tmc: enable monte-carlo evaluation" << endl;
   outs << "\tboard: the board cards (e.g. Th9s2c)" << endl;
   outs << "\tdead: the dead cards (e.g. Ad2s)" << endl;
@@ -298,6 +299,7 @@ int main(int argc, char **argv){
          << endl;
 
     cout << "Standard deviation: " << r.stdev << endl;
+  }
 
   return EXIT_SUCCESS;
 }
