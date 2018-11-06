@@ -253,8 +253,7 @@ int main(int argc, char **argv){
   eq.wait();
 
   //printing results
-  cout << fixed; //always 2 digits to the right of the decimal point
-  cout.precision(2);
+  cout << fixed; cout.precision(2); //always 2 digits after the decimal
   auto r = eq.getResults();
   assert (range_strs.size() == r.players);
   cout << "Equity between " + to_string(r.players) + " players:" << endl;
@@ -275,11 +274,9 @@ int main(int argc, char **argv){
       cout << "Calculation progress: " << r.progress * 100 << "%." << endl;
       cout << "Consider using monte-carlo with --mc" << endl;
     } else { //we need more significant digits to print stdev
-      cout << defaultfloat; //reset fixed marker
-      cout.precision(6); //default precision
+      cout << defaultfloat; cout.precision(6); //default precision
       cout << "Standard deviation: " << r.stdev * 100 << "%." << endl;
-      cout << fixed; //reset printing variables
-      cout.precision(2);
+      cout << fixed; cout.precision(2);
     }
   }
 
@@ -298,6 +295,7 @@ int main(int argc, char **argv){
     cout << r.evaluations << " (" << showdown << "%) of hands reached showdown"
          << endl;
 
+    cout << defaultfloat; cout.precision(6);
     cout << "Standard deviation: " << r.stdev << endl;
   }
 
