@@ -274,29 +274,31 @@ int main(int argc, char **argv){
       cout << "Calculation progress: " << r.progress * 100 << "%." << endl;
       cout << "Consider using monte-carlo with --mc" << endl;
     } else { //we need more significant digits to print stdev
-      cout << defaultfloat; cout.precision(6); //default precision
+      cout.precision(6); //default precision
       cout << "Standard deviation: " << r.stdev * 100 << "%." << endl;
-      cout << fixed; cout.precision(2);
+      cout.precision(2);
     }
   }
 
   if (print_advanced_info){
-    double eval_pfc =
-      (static_cast<double>(r.evaluatedPreflopCombos) / r.preflopCombos) * 100;
-    double showdown =
-      (static_cast<double>(r.evaluations) / r.hands) * 100;
-
     cout << r.hands << " hands evaluated at " << r.speed << " hands/s."
          << endl;
 
-    cout << r.evaluatedPreflopCombos << " of " << r.preflopCombos << " ("
-         << eval_pfc << "%) preflop combinations evaluated." << endl;
+    if (r.enumerateAll){
+      double skipped_pfc =
+        (static_cast<double>(r.skippedPreflopCombos) / r.preflopCombos) * 100;
+      double showdown =
+        (static_cast<double>(r.evaluations) / r.hands) * 100;
 
-    cout << r.evaluations << " (" << showdown << "%) of hands reached showdown"
-         << endl;
+      cout << r.skippedPreflopCombos << " of " << r.preflopCombos << " ("
+           << skipped_pfc << "%) preflop combinations skipped." << endl;
 
-    cout << defaultfloat; cout.precision(6);
-    cout << "Standard deviation: " << r.stdev << endl;
+      cout << r.evaluations << " (" << showdown << "%) of hands reached "
+           << "showdown." << endl;
+    } else {
+      cout.precision(6);
+      cout << "Standard deviation: " << r.stdev << endl;
+    }
   }
 
   return EXIT_SUCCESS;
