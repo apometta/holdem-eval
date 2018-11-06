@@ -1,5 +1,5 @@
 /*This file, written by Andrew H. Pometta, exports the PercentageToRange class,
-which takes in the percentage passed into it by the omp-heval main
+which takes in the percentage passed into it by the omp-eval main
 implementation file and gives back the string corresponding to the range
 represented by that percentage.  It is implemented in PercentageToRange.cpp.
 

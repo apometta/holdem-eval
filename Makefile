@@ -1,10 +1,10 @@
 #This Makefile, written by Andrew H. Pometta, is the Makefile for the
-#omp-heval project.  It compiles the main executable from the source.
+#omp-eval project.  It compiles the main executable from the source.
 
 #To build the program, simply use "make" as the target in the directory
 #with this Makefile.  The executable and all necessary dependencies should
-#be compiled and built - the executable is "omp-heval", which can be run
-#in the directory with the command "./omp-heval ...".  See README.md or run
+#be compiled and built - the executable is "omp-eval", which can be run
+#in the directory with the command "./omp-eval ...".  See README.md or run
 #"./omp-eval -h" for more information.
 
 #To remove all built files and the executable, run "make clean".  To remove all
@@ -19,7 +19,7 @@ OMPESRC = $(wildcard OMPEval/omp/*.cpp)
 OMPEOBJ = ${OMPESRC:.cpp=.o}
 LIB = OMPEval/lib
 ARCH = $(LIB)/ompeval.a
-EXEC = omp-heval
+EXEC = omp-eval
 
 all: $(EXEC)
 
