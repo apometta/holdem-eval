@@ -24,7 +24,9 @@ Seq:    775  223   1588  80    716  134   1122  75    691  204   1544  69
 Rand1:  272  146   19    43    233  99    19    38    262  148   19    39      (Meval/s)
 Rand2:  520              87    466              62    529              72
 ```
+
 ###Usage
+
 ```c++
 #include <omp/HandEvaluator.h>
 #include <iostream>
@@ -49,6 +51,7 @@ int main()
 In x64 mode both Monte carlo and enumeration are roughly 2-10x faster (per thread) than the free version of Equilab (except headsup enumeration where EquiLab uses precalculated results).
 
 ###Basic usage
+
 ```c++
 #include <omp/EquityCalculator.h>
 #include <iostream>
@@ -61,7 +64,9 @@ int main()
     std::cout << r.equity[0] << " " << r.equity[1] << std::endl;
 }
 ```
+
 ###Advanced usage
+
 ```c++
 #include <omp/EquityCalculator.h>
 #include <iostream>
