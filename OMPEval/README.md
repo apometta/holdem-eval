@@ -1,3 +1,9 @@
+**omp-eval author's note:** this is a cloned version of the [OMPEval library](https://github.com/zekyll/OMPEval).  Because there is [an issue](https://github.com/zekyll/OMPEval/issues/13) which causes a compilation error in the base library, I have cloned it instead of using it as a submodule.  The fix is to simply add a line of code in [omp/EquityCalculator.h](https://github.com/apometta/omp-eval/blob/master/OMPEval/omp/EquityCalculator.h):
+
+    #include <functional>
+
+Other than that inclusion and this note in the README, no other files have been changed.
+
 # OMPEval
 
 OMPEval is a fast C++ hand evaluator and equity calculator for Texas Holdem poker.
