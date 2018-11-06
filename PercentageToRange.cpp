@@ -58,7 +58,7 @@ std::string PercentageToRange::percentage_to_str(const double percentage){
 /*Given string input, return the necessary string.  See the method in
 PercentageToRange.h for details and return value. */
 std::string PercentageToRange::percentage_to_str(const std::string percentage){
-  //Given what's happening in term-heval, we know the string contains the %
+  //Given what's happening in omp-heval, we know the string contains the %
   //symbol, and has no whitespace.  If the conversion succeeds but there is
   //anything other than % signs, we complain
   double d; std::size_t trail_pos;
