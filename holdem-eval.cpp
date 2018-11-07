@@ -295,7 +295,7 @@ int main(int argc, char **argv){
 
       cout << r.evaluations << " (" << showdown << "%) of hands reached "
            << "showdown." << endl;
-    } else {
+    } else if (!r.enumerateAll && completed){
       cout.precision(6);
       cout << "Standard deviation: " << r.stdev << endl;
     }
