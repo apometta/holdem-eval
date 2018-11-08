@@ -13,11 +13,12 @@
 CXX = g++
 CXXFLAGS += -O3 -std=c++11 -Wall -Wpedantic -pthread
 RM = rm -rf
-MSRC = PercentageToRange.cpp holdem-eval.cpp
+MSRC = $(wildcard src/*.cpp)
+OMPEDIR = src/OMPEval
 #below taken and adapted from OMPEval makefile
-OMPESRC = $(wildcard OMPEval/omp/*.cpp)
+OMPESRC = $(wildcard $(OMPEDIR)/omp/*.cpp)
 OMPEOBJ = ${OMPESRC:.cpp=.o}
-LIB = OMPEval/lib
+LIB = $(OMPEDIR)/lib
 ARCH = $(LIB)/ompeval.a
 EXEC = holdem-eval
 
