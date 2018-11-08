@@ -21,8 +21,40 @@ On Unix systems, the holdem-eval executable can be built using the pre-included 
 ##Usage
 
 ```bash
+holdem-eval [-a] [--mc] [-b BOARD] [-d DEAD] [-e ERROR] [-t TIME] range1 range2 [range3...]
 holdem-eval [-h]
-holdem-eval [-a] [--mc] [-b board] [-d dead] [-e error] [-t time] range1 range2 [range3...]
 ```
 
-holdem-eval takes in, at minimum 2 hand ranges.  It can take more after, up to 6.  The ranges can be input in a syntax understandable by other poker programs such as Pokerstove.
+holdem-eval takes in, at minimum 2 hand ranges.  It can take more after, up to 6.  The ranges can be input in a syntax understandable by other poker programs such as Pokerstove.  As an alternative to this, a percentage can also be input, which will be interpreted as the best percentage of preflop hand combinations someone can have according to Pokerstove.  For instance, range arguments `3.2% 9.5%` and `99+,AKs 88+,ATs+,KTs+,QJs,AJo+,KQo` are equivalent.  The argument `random` will be interpreted as any two cards, or 100%.  Note that an empty range is **not** valid, as the program will interpret it as an input error.  Options can be inserted before the ranges, and are defined as follows:
+
+* **-h**: prints help information and exits the program.
+* **-a**: prints advanced information when printing equity results.
+* **--mc**, **--monte-carlo**: Enables Monte Carlo enumeration, as opposed to enumerating over every possibility.
+* **-b**, **--board** BOARD: sets the board cards to be equal to BOARD.  The board cards are the cards already in play at the time of equity analysis.  There must be at least one and no more than 5.  Each individual card is specified *without commas* as one string by rank and suit.  Example: `-b TsJc2d`
+* **-d**, **dead** DEAD: sets the dead cards equal to DEAD.  The dead cards are those known not to be in play, by not being on the board, in any player's hand or in the deck.  They are specified the same way as the board cards.  Example: `-d 3h9c`
+* **-e**, **--margin**, **--stdev** ERROR: sets the target standard deviation to the specified ERROR, which must be a number.  Once the target is reached during Monte Carlo evaluation, the calculation is stopped.  The default is 0.01%, although this option does nothing unless **--mc** is enabled.  ERROR can be either a raw number or a percent: if it is a percent, it is converted to a number by dividing by 100.  For instance, `-e 0.002%`, `-e 2e-5` and `-e 0.00002` are all equivalent.
+* **-t**, **--time** TIME: sets the maximum time allotted to the equity calculation in seconds.  If the calculation is not complete before the time limit, it is stopped, the current results are printed, and more useful information is printed below the results.
+
+###Examples
+
+```bash
+$ \#Basic example, supposing the executable is in the current directory
+$ ./holdem-eval 8h9h 10.3%
+Equity between 2 players:
+***
+                               8h9h: 34.52%
+10.3% (77+,A9s+,KTs+,QTs+,AJo+,KQo): 65.48%
+***
+Calculation completed in 0.08 seconds.
+$ \#Advanced example
+$ ./holdem-eval -a --mc -b Ks5h2h -d 7d6d -e 0.003% -t 15 TT+,AJs+,KQs,AQo+ 55-22,A5s-A2s,QTs+,JTs,T9s,98s,QJo,JTo random
+Equity between 3 players:
+***
+                     TT+,AJs+,KQs,AQo+: 12.67%
+55-22,A5s-A2s,QTs+,JTs,T9s,98s,QJo,JTo: 81.27%
+                                random: 6.06%
+***
+Calculation completed in 1.40 seconds.
+155701248 hands evaluated at 111189178.89 hands/s.
+Standard deviation: 0.000028
+```
