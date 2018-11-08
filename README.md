@@ -71,9 +71,21 @@ The program's exit status will be set as follows:
 * **0**: Success
 * **1**: Invalid argument for BOARD or DEAD
 * **2**: Invalid argument for ERROR or TIME
-* **3**: Infinite simulation queried.  This occurs when `--mc`, `-e 0` and `-t 0` are all set, which would cause the program to never stop
+* **3**: Infinite simulation queried.  This occurs when `--mc`, `-e 0` and `-t 0` are all set, which would cause the program to never stop.
 * **4**: Invalid option
 * **5**: Too many (>6) or too few (<2) hand ranges inputted
 * **6**: Invalid range argument
 * **7**: Invalid percentage range argument
-* **8**: Range conflict.  This occurs when the requested situation is impossible due to a range being impossible.  For example, if someone's hand was set as `7c7d`, but the option `-d 9h7cJc` was used: it is impossible for the 7 of clubs to be both on the board and in someone's hand.
+* **8**: Range conflict.  This occurs when the requested situation is impossible due to a range being impossible.  For example, if someone's hand was set as `7c7d`, but the option `-b 9h7cJc` was used: it is impossible for the 7 of clubs to be both on the board and in someone's hand.
+
+## Authors
+
+* **Andrew H. Pometta**
+
+## 3rd Party Libraries
+
+holdem-eval uses [OMPEval](https://github.com/zekyll/OMPEval), a poker equity calculator library for C++.  OMPEval itself uses [libdivide](http://libdivide.com/).
+
+## License
+
+holdem-eval uses the ISC license - see [LICENSE](LICENSE) for details.  OMPEval also uses the ISC license, as specified in [LICENSE.txt](src/OMPEval/LICENSE.txt) in its own folder.  libdivide has its own license: see [LICENSE-libdivide.txt](src/OMPEval/LICENSE-libdivide.txt).
