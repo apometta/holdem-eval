@@ -37,9 +37,9 @@ string progname; //global scope to be accessed outside of main
 /*Prints usage information for the program, to be used with -h.  Prints to
 std::cerr by default, but can be changed with optional argument. */
 void print_usage(ostream& outs = cerr){
-  outs << "usage: " << progname << " [-h] [-a] [--mc] [-b board] [-d dead] "
-       << "[-e error] [-t time] range1 range2 [range3...]" << endl;
-  outs << "\th: print help information" << endl;
+  outs << "usage: " << progname << " [-h] [-a] [--mc] [-b BOARD] [-d DEAD] "
+       << "[-e ERROR] [-t TIME] range1 range2 [range3...]" << endl;
+  outs << "\th: prints this help information and exits" << endl;
   outs << "\ta: print advanced statistics" << endl;
   outs << "\tmc: enable monte-carlo evaluation" << endl;
   outs << "\tboard: the board cards (e.g. Th9s2c)" << endl;
@@ -144,7 +144,7 @@ int main(int argc, char **argv){
   -b, --board: board.  one string.  default empty
   -d, --dead: dead.  one string  default empty.
   --mc, --monte-carlo: mc simulation.  default false.
-  -e, --margin, --stderr: margin of error.  expects a double. default 0.01%
+  -e, --margin, --stdev: margin of error.  expects a double. default 0.01%
                           use 0 for infinite, does nothing without --mc
   -t, --time: maximum time to calculate for in seconds.  default 30,
               0 for infinite calculation (use at your own risk)
@@ -156,7 +156,7 @@ int main(int argc, char **argv){
     {"mc", no_argument, 0, 'm'},
     {"monte-carlo", no_argument, 0, 'm'}, //same as --mc
     {"margin", required_argument, 0, 'e'},
-    {"stderr", required_argument, 0, 'e'}, //same as --margin
+    {"stdev", required_argument, 0, 'e'}, //same as --margin
     {"time", required_argument, 0, 't'},
     {"help", no_argument, 0, 'h'},
     {"advanced", no_argument, 0, 'a'},
