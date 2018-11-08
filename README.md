@@ -32,13 +32,15 @@ holdem-eval takes in, at minimum 2 hand ranges.  It can take more after, up to 6
 * **--mc**, **--monte-carlo**: Enables Monte Carlo enumeration, as opposed to enumerating over every possibility.
 * **-b**, **--board** BOARD: sets the board cards to be equal to BOARD.  The board cards are the cards already in play at the time of equity analysis.  There must be at least one and no more than 5.  Each individual card is specified *without commas* as one string by rank and suit.  Example: `-b TsJc2d`
 * **-d**, **dead** DEAD: sets the dead cards equal to DEAD.  The dead cards are those known not to be in play, by not being on the board, in any player's hand or in the deck.  They are specified the same way as the board cards.  Example: `-d 3h9c`
-* **-e**, **--margin**, **--stdev** ERROR: sets the target standard deviation to the specified ERROR, which must be a number.  Once the target is reached during Monte Carlo evaluation, the calculation is stopped.  The default is 0.01%, although this option does nothing unless **--mc** is enabled.  ERROR can be either a raw number or a percent: if it is a percent, it is converted to a number by dividing by 100.  For instance, `-e 0.002%`, `-e 2e-5` and `-e 0.00002` are all equivalent.
-* **-t**, **--time** TIME: sets the maximum time allotted to the equity calculation in seconds.  If the calculation is not complete before the time limit, it is stopped, the current results are printed, and more useful information is printed below the results.
+* **-e**, **--margin**, **--stdev** ERROR: sets the target standard deviation to the specified ERROR, which must be a number.  Once the target is reached during Monte Carlo evaluation, the calculation is stopped.  The default is 0.01%, although this option does nothing unless **--mc** is enabled.  ERROR can be either a raw number or a percent: if it is a percent, it is converted to a number by dividing by 100.  For instance, `-e 0.002%`, `-e 2e-5` and `-e 0.00002` are all equivalent.  An argument of 0 means to continue evaluation until time runs out.
+* **-t**, **--time** TIME: sets the maximum time allotted to the equity calculation in seconds.  If the calculation is not complete before the time limit, it is stopped, the current results are printed, and more useful information is printed below the results.  An argument of 0 means no time limit.
 
 ### Examples
 
+#### Basic Example
+
 ```bash
-$ #Basic example, supposing the executable is in the current directory
+$ #Assuming the holdem-eval executable file is in the current working directory (.)
 $ ./holdem-eval 8h9h 10.3%
 Equity between 2 players:
 ***
@@ -46,7 +48,11 @@ Equity between 2 players:
 10.3% (77+,A9s+,KTs+,QTs+,AJo+,KQo): 65.48%
 ***
 Calculation completed in 0.08 seconds.
-$ #Advanced example
+```
+
+#### Advanced Example
+
+```bash
 $ ./holdem-eval -a --mc -b Ks5h2h -d 7d6d -e 0.003% -t 15 TT+,AJs+,KQs,AQo+ 55-22,A5s-A2s,QTs+,JTs,T9s,98s,QJo,JTo random
 Equity between 3 players:
 ***
@@ -58,3 +64,16 @@ Calculation completed in 1.40 seconds.
 155701248 hands evaluated at 111189178.89 hands/s.
 Standard deviation: 0.000028
 ```
+
+### Exit Status
+
+The program's exit status will be set as follows:
+* **0**: Success
+* **1**: Invalid argument for BOARD or DEAD
+* **2**: Invalid argument for ERROR or TIME
+* **3**: Infinite simulation queried.  This occurs when `--mc`, `-e 0` and `-t 0` are all set, which would cause the program to never stop
+* **4**: Invalid option
+* **5**: Too many (>6) or too few (<2) hand ranges inputted
+* **6**: Invalid range argument
+* **7**: Invalid percentage range argument
+* **8**: Range conflict.  This occurs when the requested situation is impossible due to a range being impossible.  For example, if someone's hand was set as `7c7d`, but the option `-d 9h7cJc` was used: it is impossible for the 7 of clubs to be both on the board and in someone's hand.
