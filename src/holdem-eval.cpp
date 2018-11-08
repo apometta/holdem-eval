@@ -3,21 +3,7 @@ for the holdem-eval program.  It utilizes the OMPEval library to run poker
 equity analysis on inputted ranges.  It is effectively a wrapper around that
 library, for usage with a Unix terminal shell.  See README.md for more
 information.  This is the main file for the program, which contains the main
-function.
-
-The exit statuses returned by the program are as follows:
-0: success, meaning evaluation was reached and attempted.
-1: invalid board or dead argument.
-2: invalid error margin or time maximum argument.
-3: infinite evaluation queried (no time maximum, monte-carlo perfect eval)
-4: unknown argument detected
-5: too many or too few hand ranges inputted
-6: invalid range input
-7: invalid percentage range input
-8: range conflict (i.e. the situation is not possible with a single deck)
-
-Note that the program timing out during the evaluation is not considered
-a failure, and EXIT_SUCCESS (0) is still returned. */
+function. */
 
 #include <iostream>
 #include <iomanip> //print formatting
