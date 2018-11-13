@@ -142,7 +142,7 @@ int main(int argc, char **argv){
     {0, 0, 0, 0} //required by getopt_long
   };
   int opt_character;
-  while ((opt_character = getopt_long(argc, argv, "b:d:me:t:ha", long_options,
+  while ((opt_character = getopt_long(argc, argv, "hab:d:e:t:", long_options,
     nullptr)) != -1){
     switch(opt_character){
       case 'b':
@@ -255,6 +255,7 @@ int main(int argc, char **argv){
         cout << "skipped preflop combos: " << r.skippedPreflopCombos << endl;
         cout << "showdowns evaluated: " << r.evaluations << endl;
       } else {
+        cout.precision(6);
         cout << "standard deviation: " << r.stdev << endl;
       }
     }
