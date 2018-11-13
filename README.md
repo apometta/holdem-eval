@@ -33,7 +33,7 @@ holdem-eval takes in, at minimum 2 hand ranges.  It can take more after, up to 6
     * 0: The evaluation completed successfully, before the time ran out.
     * 1 (or any other number): The evaluation timed out before the enumeration was complete (or, for Monte Carlo evaluation, the target margin of error was reached).
 
-  This option does nothing if the program fails out before results are to be printed.  The first number does not correspond to the exit status of the program.  After the first line, the rest of the information is printed without sentences.  The variable/range string is printed, followed by a colon, followed by the value and nothing else.
+  This option does nothing if the program fails out before results are to be printed.  The first number does not correspond to the exit status of the program.  After the first line, the rest of the information is printed in a basic fashion.
 * **--mc**, **--monte-carlo**: Enables Monte Carlo enumeration, as opposed to enumerating over every possibility.
 * **-b**, **--board** BOARD: sets the board cards to be equal to BOARD.  The board cards are the cards already in play at the time of equity analysis.  There must be at least one and no more than 5.  Each individual card is specified *without commas* as one string by rank and suit.
 
