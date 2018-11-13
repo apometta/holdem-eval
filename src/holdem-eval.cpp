@@ -246,14 +246,22 @@ int main(int argc, char **argv){
       cout << range_strs.at(i) << ": " << r.equity[i] * 100 << "%" << endl;
     }
     cout << endl; //blank line between equities and other information
-    cout << "time: " << r.time;
+    cout << "time: " << r.time << endl;
     if (print_advanced_info){
-      cout << "hands: " << r.hands;
-      cout << "hands/s: " << r.speed;
+      cout << "hands: " << r.hands << endl;
+      cout << "hands/s: " << r.speed << endl;
+      cout << "preflop combos: " << r.preflopCombos << endl;
+      if (r.enumerateAll){
+        cout << "skipped preflop combos: " << r.skippedPreflopCombos << endl;
+        cout << "showdowns evaluated: " << r.evaluations << endl;
+      } else {
+        cout << "standard deviation: " << r.stdev << endl;
+      }
     }
+
+    return EXIT_SUCCESS;
   }
 
-  //printing results
   assert (range_strs.size() == r.players);
   cout << "Equity between " + to_string(r.players) + " players:" << endl;
   cout << "***" << endl;
@@ -281,6 +289,7 @@ int main(int argc, char **argv){
   if (print_advanced_info){
     cout << r.hands << " hands evaluated at " << r.speed << " hands/s."
          << endl;
+    cout << r.preflopCombos << " possible preflop combinations." << endl;
 
     if (r.enumerateAll){
       double skipped_pfc =
@@ -288,8 +297,8 @@ int main(int argc, char **argv){
       double showdown =
         (static_cast<double>(r.evaluations) / r.hands) * 100;
 
-      cout << r.skippedPreflopCombos << " of " << r.preflopCombos << " ("
-           << skipped_pfc << "%) preflop combinations skipped." << endl;
+      cout << r.skippedPreflopCombos << " (" << skipped_pfc
+           << "%) preflop combinations skipped." << endl;
 
       cout << r.evaluations << " (" << showdown << "%) of hands reached "
            << "showdown." << endl;
