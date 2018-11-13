@@ -23,10 +23,11 @@ string progname; //global scope to be accessed outside of main
 /*Prints usage information for the program, to be used with -h.  Prints to
 std::cerr by default, but can be changed with optional argument. */
 void print_usage(ostream& outs = cerr){
-  outs << "usage: " << progname << " [-h] [-a] [--mc] [-b BOARD] [-d DEAD] "
-       << "[-e ERROR] [-t TIME] range1 range2 [range3...]" << endl;
+  outs << "usage: " << progname << " [-ha] [--format] [--mc] [-b BOARD] "
+       << "[-d DEAD] [-e ERROR] [-t TIME] range1 range2 [range3...]" << endl;
   outs << "\th: prints this help information and exits" << endl;
   outs << "\ta: print advanced statistics" << endl;
+  outs << "\tformat: heavily abridges results printing" << endl;
   outs << "\tmc: enable monte-carlo evaluation" << endl;
   outs << "\tboard: the board cards (e.g. Th9s2c)" << endl;
   outs << "\tdead: the dead cards (e.g. Ad2s)" << endl;
@@ -121,21 +122,12 @@ uint64_t get_cardmask(string cards, bool board = false){
 
 int main(int argc, char **argv){
   progname = argv[0];
+  //default values
   uint64_t board = 0; uint64_t dead = 0;
-  bool monte_carlo = false; bool print_advanced_info = false;
+  bool monte_carlo = false;
+  bool print_advanced_info = false; bool format_results = false;
   double err_margin = 1e-4; double time_max = 30;
 
-  //Option gathering
-  /*OPTIONS:
-  -b, --board: board.  one string.  default empty
-  -d, --dead: dead.  one string  default empty.
-  --mc, --monte-carlo: mc simulation.  default false.
-  -e, --margin, --stdev: margin of error.  expects a double. default 0.01%
-                          use 0 for infinite, does nothing without --mc
-  -t, --time: maximum time to calculate for in seconds.  default 30,
-              0 for infinite calculation (use at your own risk)
-  -h, --help: print help information
-  */
   static struct option long_options[] = {
     {"board", required_argument, 0, 'b'},
     {"dead", required_argument, 0, 'd'},
@@ -146,6 +138,7 @@ int main(int argc, char **argv){
     {"time", required_argument, 0, 't'},
     {"help", no_argument, 0, 'h'},
     {"advanced", no_argument, 0, 'a'},
+    {"format", no_argument, 0, 'f'},
     {0, 0, 0, 0} //required by getopt_long
   };
   int opt_character;
@@ -199,12 +192,15 @@ int main(int argc, char **argv){
       case 'a':
         print_advanced_info = true;
         break;
+      case 'f':
+        format_results = true;
+        break;
       default:
-        //getopt actually prints the error message for us so we don't need to
+        //getopt prints the error message for us
         //./holdem-eval: invalid option -- '(option)'
         print_usage(cerr);
         exit(4);
-        break; //cleaner
+        break;
     }
   }
   //make sure running is non-infinite
@@ -238,9 +234,26 @@ int main(int argc, char **argv){
   }
   eq.wait();
 
-  //printing results
-  cout << fixed; cout.precision(2); //always 2 digits after the decimal
   auto r = eq.getResults();
+  bool completed = (r.progress >= 1);
+  cout << fixed; cout.precision(2); //always 2 digits after the decimal
+
+  if (format_results){
+    if (completed) cout << "0" << endl;
+    else cout << "1" << endl;
+
+    for (unsigned int i = 0; i < r.players; ++i){
+      cout << range_strs.at(i) << ": " << r.equity[i] * 100 << "%" << endl;
+    }
+    cout << endl; //blank line between equities and other information
+    cout << "time: " << r.time;
+    if (print_advanced_info){
+      cout << "hands: " << r.hands;
+      cout << "hands/s: " << r.speed;
+    }
+  }
+
+  //printing results
   assert (range_strs.size() == r.players);
   cout << "Equity between " + to_string(r.players) + " players:" << endl;
   cout << "***" << endl;
@@ -251,7 +264,6 @@ int main(int argc, char **argv){
   }
   cout << "***" << endl;
 
-  bool completed = (r.progress >= 1);
   if (completed){
     cout << "Calculation completed in " << r.time << " seconds." << endl;
   } else {
