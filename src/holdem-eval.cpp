@@ -45,7 +45,10 @@ which by default is EXIT_FAILURE. */
 void fail_prog(string err_report, int status = EXIT_FAILURE,
                bool usage = false){
   cerr << progname << ": error: " << err_report << endl;
-  if (usage) print_usage();
+  //usage information supressed in all situations for purposes of
+  //THE-equity-bot.  Uncomment line below to enable printing usage information
+  //in specific situations
+  //if (usage) print_usage();
   exit(status);
 }
 
