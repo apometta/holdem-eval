@@ -91,7 +91,7 @@ vector<CardRange> get_ranges_from_argv(vector<string>& range_strings,
     if (cr->combinations().empty()){
       //empty range, or range resulting from bad string.  fail out
       delete cr;
-      fail_prog("range " + *i + " invalid", 6, false);
+      fail_prog("invalid range " + *i, 6, false);
     }
     ranges.push_back(*cr);
     delete cr; //avoid memory leaks.  this doesn't compromise ranges
@@ -165,7 +165,7 @@ int main(int argc, char **argv){
             err_margin /= 100; //error margin inputted as a percentage
           }
         } catch (out_of_range oor) {
-          fail_prog("Error margin " + cpp_err + " out of range", 2, false);
+          fail_prog("Out of range error margin " + cpp_err, 2, false);
         } catch (invalid_argument ia) {
           fail_prog("Invalid error margin argument " + cpp_err, 2, false);
         }
@@ -177,8 +177,7 @@ int main(int argc, char **argv){
         try {
           time_max = stod(cpp_time);
         } catch (out_of_range oor) {
-          fail_prog("Maximum time " + cpp_time + " out of range " +
-                    "(use -t 0 for no time limit)", 2, false);
+          fail_prog("Out of range maximum time " + cpp_time, 2, false);
         } catch (invalid_argument ia) {
           fail_prog("Invalid maximum time argument " + cpp_time, 2, false);
         }
