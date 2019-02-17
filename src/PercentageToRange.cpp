@@ -68,11 +68,11 @@ std::string PercentageToRange::percentage_to_str(const std::string percentage){
     //this method to necessarily do it themselves, but throw them as our
     //own errors to display the problem easily
   } catch (std::out_of_range oor){
-    throw std::string("percentage range " + percentage + " out of range");
+    throw std::string("out of range percentage range " + percentage);
   } catch (std::invalid_argument ia){
     //This will occurr if there is anything before the number itself, e.g.
     //input "fdssa60%"
-    throw std::string("percentage range " + percentage + " invalid");
+    throw std::string("invalid percentage range " + percentage);
   }
 
   std::string trail = percentage.substr(trail_pos); //what's leftover
@@ -80,14 +80,14 @@ std::string PercentageToRange::percentage_to_str(const std::string percentage){
     //Either there is no percentage sign in the string, or there is something
     //between the number converted and the percent sign, e.g. input
     //"60" or "60fdsa%"
-    throw std::string("percentage range " + percentage + " invalid");
+    throw std::string("invalid percentage range " + percentage);
   }
   trail.erase(std::remove(trail.begin(), trail.end(), '%'), trail.end());
   if (trail != ""){
     //After removing the percentage signs, if there is anything leftover,
     //then we complain nonetheless: this is done to ensure accidental inputs
     //aren't counted.  e.g. input "60%fdsa"
-    throw std::string("percentage range " + percentage + " invalid");
+    throw std::string("invalid percentage range " + percentage);
   }
 
   //Note that we do allow multiple percentage signs, e.g. input "60%%%" is
